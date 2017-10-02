@@ -31,7 +31,7 @@ nn = 10;   % Integrator steps per step
 h = DT/nn; % Step size of integrator step
 Xk = x;
 for i=1:nn % Oversampling
-    Xk = rk4step(ode, Xk, u, h);
+    Xk = rk4step_ode(ode, Xk, u, h);
 end
 % Discretized ode
 ode_d = Function('ode_d', {x,u}, {Xk}, {'x','u'}, {'xk'});
