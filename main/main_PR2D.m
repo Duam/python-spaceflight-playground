@@ -12,10 +12,12 @@ N = 100;                % Number of samples
 DT = T/N;               % Step size
 
 % -- Parameters of target orbit --
-R_T = R + 20000;        % Target radius
+% R_T = R + 20;           % Target radius
+h_T = 20;               % Target altitude %CHANGED
 
 % -- Initial state --
-x0 = [R; pi/2; 0; 0; m0];   % Rocket starts from "top" of the moon
+% x0 = [R; pi/2; 0; 0; m0];   % Rocket starts from "top" of the moon
+x0 = [0; pi/2; 0; 0; m0]; % CHANGED
 
 %% ------------------------ System model ----------------------------------
 nx = 5;
@@ -48,8 +50,8 @@ L_d = Function('L', {x,u}, {Lk}, {'x','u'}, {'Lk'});
 %% ----------------------- Initial guess ----------------------------------
 % -- Load precomputed trajectory as initial guess --
 winit = load('main/guess_PR2D.mat');
-x_g = winit.winit_PR2D.State;
-u_g = winit.winit_PR2D.Control;
+x_g = winit.PR2D.X;
+u_g = winit.PR2D.U;
 
 % Next: scale the ode
 
@@ -90,7 +92,7 @@ for k=0:N-1
     % New NLP variable for state
     Xk  = MX.sym(['X_' num2str(k+1)], nx);
     w   = {w{:}, Xk};
-    lbw = [lbw; R; ...
+    lbw = [lbw; 0; ...
                 -inf; ...
                 -inf; ...
                 -inf; ...
@@ -109,8 +111,9 @@ for k=0:N-1
 end
 
 % Intermediate quantities
-dR_T        = Xk_end(1) - R_T;
-dThetaDot_T = Xk_end(4) - sqrt(mu/R_T^3);
+% dR_T        = Xk_end(1) - R_T;
+dR_T        = Xk_end(1) - h_T;
+dThetaDot_T = Xk_end(4) - 10^6 * sqrt(mu/(R+h_T)^3);
 
 % End cost
 J   = J - Xk_end(5).' * Xk_end(5);
@@ -133,7 +136,7 @@ w = vertcat(w{:});
 nlp = struct('f', J, 'x', w, 'g', g);
 options = struct;
 options.ipopt.max_iter = 5000;
-options.ipopt.check_derivatives_for_naninf = 'yes';
+%options.ipopt.check_derivatives_for_naninf = 'yes';
 options.ipopt.print_info_string = 'yes';
 %options.ipopt.derivative_test = 'second-order';
 solver = nlpsol('solver', 'ipopt', nlp, options);
