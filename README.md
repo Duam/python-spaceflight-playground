@@ -9,12 +9,12 @@ moon, which is also modelled as a point mass. Its target is a stable, circular o
 a given radius. The rocket does not have a rotation and its thrusters can fire in any 
 arbitrary direction.
 ### States
-x(1) = r        -- Distance from the origin (km) <br \>
-x(2) = theta    -- Angle from horizontal axis (milliRad) <br \>
-x(3) = rDot     -- Radial velocity (km per second) <br \>
-x(4) = thetaDot -- Angular velocity (milliRad per second) <br \>
-x(5) = m        -- Mass (kg) <br \>
+- x(1) = r        -- Altitude (km)
+- x(2) = theta    -- Angle from horizontal axis (microRad)
+- x(3) = rDot     -- Radial velocity (km per second)
+- x(4) = thetaDot -- Angular velocity (microRad per second)
+- x(5) = m        -- Mass (kg)
 ### Controls
-u(1) = u_r      -- Thrust in radial direction (percentage of max. thrust) <br \>
-u(2) = u_t      -- Thrust in tangential direction (percentage of max. thrust) <br \>
+- u(1) = u_r      -- Thrust in radial direction (percentage of max. thrust)
+- u(2) = u_t      -- Thrust in tangential direction (percentage of max. thrust)
 
