@@ -128,6 +128,12 @@ g = {g{:}, dR_T};
 lbg = [lbg; 0];
 ubg = [ubg; 0];
 
+% Terminal constraint on radial velocity
+g = {g{:}, Xk_end(3)};
+lbg = [lbg; 0];
+ubg = [ubg; 0];
+
+
 % Clean up and reorder
 g = vertcat(g{:});
 w = vertcat(w{:});
