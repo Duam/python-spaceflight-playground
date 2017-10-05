@@ -1,17 +1,14 @@
 %% ---------------- Parameters (All in kg, km, s) --------------------------
 % -- Physical parameters --
 G  = 6.67408 * 10^-11;          % Grav. const. (m^3 * kg^-1 * s^-2)
-% G  = 6.67408 * 10^-20;          % Grav. const. (km^3 * kg^-1 * s^-2)
 M  = 7.348 * 10^22;             % Moon mass (kg)
 mu = G * M;                     % Std. grav. param. (km^3 * s^-2)
-R  = 1737.5 * 10^6;             % Moon radius (m)
-% R  = 1737.5 * 10^3;             % Moon radius (km)
+R  = 1737.5 * 10^3;             % Moon radius (m)
 
 % -- Rocket parameters --
 m0    = 20 * 10^3;              % Init. rocket mass (kg)
 m_e   =  1 * 10^3;              % Empty rocket mass (kg)
 u_bar = 30 * 10^4;              % Max. thrust (N)
-% u_bar = 30 * 10^1;              % Max. thrust (kN)
 k_m   =      10^2;              % Fuel consumption coeff. (kg * s^-1)
 
 %% ----------------- System ODE -------------------------------------------
@@ -42,9 +39,9 @@ xdot = @(x,u) [
 
 % Scaling factor
 % km becomes m
-% µrad becomes rad
+% nrad becomes rad
 % kg stays kg
-scale = [10^3; 10^-6; 10^3; 10^-6; 1];
+scale = [10^3; 10^-9; 10^3; 10^-9; 1];
 unscale = scale.^-1;
 
 % Scale ODE
