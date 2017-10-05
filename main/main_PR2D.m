@@ -5,19 +5,20 @@ import casadi.*
 % Current working directory must be "ControlledRocket"
 run ODEs/PointRocket2D.m
 
-%% ---------------- Parameters (All in kg, m, s) --------------------------
+%% --------------------- Parameters --------------------------
 % -- Simulation parameters --
 T = 600;                % Simulation time in seconds
 N = 100;                % Number of samples
 DT = T/N;               % Step size
 
 % -- Parameters of target orbit --
-% R_T = R + 20;           % Target radius
-h_T = 20;               % Target altitude %CHANGED
+% Target altitude
+h_T = 20;         
+% Orbital angular velocity in microradians
+angVel_T = 10^6 * sqrt(mu/(R+10^3*h_T)^3); 
 
 % -- Initial state --
-% x0 = [R; pi/2; 0; 0; m0];   % Rocket starts from "top" of the moon
-x0 = [0; pi/2; 0; 0; m0]; % CHANGED
+x0 = [0; 0; 0; 0; m0];
 
 %% ------------------------ System model ----------------------------------
 nx = 5;
@@ -50,10 +51,8 @@ L_d = Function('L', {x,u}, {Lk}, {'x','u'}, {'Lk'});
 %% ----------------------- Initial guess ----------------------------------
 % -- Load precomputed trajectory as initial guess --
 winit = load('main/guess_PR2D.mat');
-x_g = winit.PR2D.X;
-u_g = winit.PR2D.U;
-
-% Next: scale the ode
+x_g = winit.sol.X;
+u_g = winit.sol.U;
 
 %% Optimization variables
 U = MX.sym('U', nu, N);
@@ -111,9 +110,8 @@ for k=0:N-1
 end
 
 % Intermediate quantities
-% dR_T        = Xk_end(1) - R_T;
 dR_T        = Xk_end(1) - h_T;
-dThetaDot_T = Xk_end(4) - 10^6 * sqrt(mu/(R+h_T)^3);
+dThetaDot_T = Xk_end(4) - angVel_T;
 
 % End cost
 J   = J - Xk_end(5).' * Xk_end(5);

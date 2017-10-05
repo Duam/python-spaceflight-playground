@@ -6,10 +6,11 @@ run ODEs/PointRocket2D.m
 % results = load('results/PR2D_sol1.mat');
 % X = results.PR2D_sol1.X;
 % U = results.PR2D_sol1.U;
-results = load('results/PR2D_sol2.mat');
-X = results.sol.X;
-U = results.sol.U;
-
+% results = load('results/PR2D_sol2.mat');
+% X = results.sol.X;
+% U = results.sol.U;
+X = x_star;
+U = u_star;
 
 % Simulation parameters
 T = 600;
@@ -18,6 +19,8 @@ DT = T/N;
 
 % Target altitude
 h_T = 20;
+% Orbital angular velocity in microradians
+angVel_T = 10^6 * sqrt(mu/(R+10^3*h_T)^3); 
 
 
 %% -- Plot --
@@ -29,7 +32,7 @@ r_T = h_T * ones(1,length(tAxis));
 theta_0 = ones(1,length(tAxis));
 % Angular velocity limits
 thetaDot_0 = zeros(1,length(tAxis));
-thetaDot_T = 10^6 * sqrt(G*M/(R+h_T)^3) * ones(1,length(tAxis));
+thetaDot_T = angVel_T * ones(1,length(tAxis));
 % Mass limits
 m_0 = m0 * ones(1,length(tAxis));
 m_T = m_e * ones(1,length(tAxis));
