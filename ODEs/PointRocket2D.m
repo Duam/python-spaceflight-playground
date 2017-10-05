@@ -41,7 +41,7 @@ xdot = @(x,u) [
 % km becomes m
 % nrad becomes rad
 % kg stays kg
-scale = [10^3; 10^-9; 10^3; 10^-9; 1];
+scale = [10^3; 10^-6; 10^3; 10^-6; 1];
 unscale = scale.^-1;
 
 % Scale ODE
