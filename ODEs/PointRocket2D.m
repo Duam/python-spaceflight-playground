@@ -1,17 +1,17 @@
 %% ---------------- Parameters (All in kg, km, s) --------------------------
 % -- Physical parameters --
-% G  = 6.67408 * 10^-11;          % Grav. const. (m^3 * kg^-1 * s^-2)
-G  = 6.67408 * 10^-20;          % Grav. const. (km^3 * kg^-1 * s^-2)
+G  = 6.67408 * 10^-11;          % Grav. const. (m^3 * kg^-1 * s^-2)
+% G  = 6.67408 * 10^-20;          % Grav. const. (km^3 * kg^-1 * s^-2)
 M  = 7.348 * 10^22;             % Moon mass (kg)
-mu = G * M;                     % Std. grav. param. (m^3 * s^-2)
-% R  = 1737.5 * 10^6;             % Moon radius (m)
-R  = 1737.5 * 10^3;             % Moon radius (km)
+mu = G * M;                     % Std. grav. param. (km^3 * s^-2)
+R  = 1737.5 * 10^6;             % Moon radius (m)
+% R  = 1737.5 * 10^3;             % Moon radius (km)
 
 % -- Rocket parameters --
 m0    = 20 * 10^3;              % Init. rocket mass (kg)
 m_e   =  1 * 10^3;              % Empty rocket mass (kg)
-% u_bar = 30 * 10^4;              % Max. thrust (N)
-u_bar = 30 * 10^1;              % Max. thrust (kN)
+u_bar = 30 * 10^4;              % Max. thrust (N)
+% u_bar = 30 * 10^1;              % Max. thrust (kN)
 k_m   =      10^2;              % Fuel consumption coeff. (kg * s^-1)
 
 %% ----------------- System ODE -------------------------------------------
@@ -31,13 +31,21 @@ k_m   =      10^2;              % Fuel consumption coeff. (kg * s^-1)
 %     - k_m * (u(1)^2 + u(2)^2)
 %     ];
 
-% Scaled system
-% Distance in kilometers (altitude)
-% Angular velocity in microrads
+% System with state 1 = altitude
 xdot = @(x,u) [
     x(3); ...
     x(4); ...
-    u(1)*u_bar/x(5)  - mu/(x(1)+R)^2 + 10^-12 * (x(1)+R)*x(4)^2; ...
-    10^6 * u(2)*u_bar/(x(5)*(x(1)+R)) - 2*x(3)*x(4)/(x(1)+R) ; ...
+    u(1)*u_bar/x(5)  - mu/(x(1)+R)^2 + (x(1)+R)*x(4)^2; ...
+    u(2)*u_bar/(x(5)*(x(1)+R)) - 2*x(3)*x(4)/(x(1)+R) ; ...
     - k_m * (u(1)^2 + u(2)^2)
     ];
+
+% Scaling factor
+% km becomes m
+% µrad becomes rad
+% kg stays kg
+scale = [10^3; 10^-6; 10^3; 10^-6; 1];
+unscale = scale.^-1;
+
+% Scale ODE
+xdot = @(x,u) unscale .* xdot(scale .* x, u);
