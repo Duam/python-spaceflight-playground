@@ -26,7 +26,7 @@ tAxis = 0:DT:T;
 r_0 = zeros(1,length(tAxis));
 r_T = h_T * ones(1,length(tAxis));
 % Angle
-theta_0 = pi/2 * ones(1,length(tAxis));
+theta_0 = ones(1,length(tAxis));
 % Angular velocity limits
 thetaDot_0 = zeros(1,length(tAxis));
 thetaDot_T = 10^6 * sqrt(G*M/(R+h_T)^3) * ones(1,length(tAxis));
@@ -73,4 +73,20 @@ plot(tAxis, m_0, '--r');
 %plot(tAxis, m_T, '--r');
 plot(tAxis, X(5,:));
 ylabel('$m$', 'interpreter', 'latex');
+grid on
+
+%% Plot controls
+figure(2);
+clf
+% Plot radius
+subplot(2,1,1);
+hold on
+stairs(tAxis(1:end-1), U(1,:));
+ylabel('$u_r$', 'interpreter', 'latex');
+grid on
+% Plot angle
+subplot(2,1,2);
+hold on
+stairs(tAxis(1:end-1), U(2,:));
+ylabel('$u_r$', 'interpreter', 'latex');
 grid on
