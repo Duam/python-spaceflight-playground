@@ -44,11 +44,12 @@ function [ xs_cart, us_cart ] = PR2D_pol2cart( xs_pol, us_pol )
     us_cart_rotated = [uxs_cart_rotated; uys_cart_rotated];
     
     % Rotate into inertial frame
-    us_cart = zeros(size(us_pol,1), size(us_pol,2));
-    for i = 1:size(ps,1)
+    us_cart = zeros(2, size(us_pol,2));
+    for i = 1:size(us_pol,2)
         theta = thetas(i);
-        Rotation = [cos(-theta), -sin(-theta); ...
-                    sin(-theta),  cos(-theta)];
+        Rotation = [cos(theta), -sin(theta); ...
+                    sin(theta),  cos(theta)];
+        
         us_cart(:,i) = Rotation * us_cart_rotated(:,i);
     end
 end
