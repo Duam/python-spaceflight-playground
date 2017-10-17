@@ -2,7 +2,7 @@
 % -- Physical parameters --
 G  = 6.67408 * 10^-11;          % Grav. const. (m^3 * kg^-1 * s^-2)
 M  = 7.348 * 10^22;             % Moon mass (kg)
-mu = G * M;                     % Std. grav. param. (km^3 * s^-2)
+mu = G * M;                     % Std. grav. param. (m^3 * s^-2)
 R  = 1737.5 * 10^3;             % Moon radius (m)
 
 % -- Rocket parameters --
