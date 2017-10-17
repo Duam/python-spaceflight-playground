@@ -1,4 +1,4 @@
-function [ ] = animate_PR2D( x_traj )
+function [ ] = animate_PR2D( x_traj, u_traj )
     
     %% Load ODE and parameters
     % Current working directory must be "ControlledRocket"
@@ -13,7 +13,7 @@ function [ ] = animate_PR2D( x_traj )
     h_T = 20;
         
     %% Get trajectory in euclidian coordinate frame (remember scaling)
-    % Get actual values from symbolics
+    % Get actual values from symbolics if necessary
     x_traj(1,:) = full(x_traj(1,:));
     x_traj(2,:) = full(x_traj(2,:));
     x_traj(3,:) = full(x_traj(3,:));
@@ -28,29 +28,9 @@ function [ ] = animate_PR2D( x_traj )
     x_traj(3,:) = kilo * x_traj(3,:);
     x_traj(4,:) = micro * x_traj(4,:);
     
-    % Extract trajectory components (account for scaling)
+    % Extract trajectory components
     N = length(x_traj(1,:));
-    [posX, posY] = pol2cart(x_traj(2,:),x_traj(1,:));
-    pos = [posX; posY];
-    
-    % Compute linear velocity
-    % v = v_rel + w x r
-    v_rel = [x_traj(3,:); zeros(2,N)];
-    
-    % Rewrite angular velocity as rotation around z-axis
-    omega = [zeros(2,N); x_traj(4,:)];
-    
-    % Compute velocity component of rotation
-    v_rot = cross(omega, [pos;zeros(1,N)]);
-    
-    % Compute velocity
-    vel = v_rel + v_rot;
-   
-    % Get mass
-    mass = x_traj(5,:);
-    
-    %% Test field
-    [x, u] = PR2D_pol2cart(x_traj, [0;0]);
+    [x, u] = PR2D_pol2cart(x_traj, u_traj);
     pos = x(1:2,:);
     vel = [x(3:4,:); zeros(1,N)];
     mass = x(5,:);
@@ -76,7 +56,7 @@ function [ ] = animate_PR2D( x_traj )
     whitebg(f1,[0 0 0]);
     
     %% Animation
-    for i=1:N
+    for i=1:N-10
         % Current state
         pos_k = pos(:,i);       % Current position
         pos_mag = norm(pos_k);        % Distance from Body
@@ -109,23 +89,34 @@ function [ ] = animate_PR2D( x_traj )
         y = pos_mid(2);
         [X,Y] = computeEllipse(x, y, a, b, beta);
        
+        
         %% Plotting
         % Make figure or use existing one
         figure(f1);
         clf;
-        
-        % Draw elements
         hold on
+        % Moon
         rectangle('Position', [-R -R 2*R 2*R], ...
                   'Curvature', [1 1], ...
                   'FaceColor', [0.7 0.7 0.7], ...
                   'LineWidth', 1, ...
                   'EdgeColor', [0.8 0.8 0.8]);
-        plot(pos_k(1), pos_k(2), 'x', 'LineWidth', 5); % Current position
-        plot(pos_traj(1,:), pos_traj(2,:), 'w.', 'LineWidth', 10);       % Past trajectory
-        plot(X, Y, 'g--');                             % Osculating orbit
-        % Plot target orbit
-        plot(X_tar, Y_tar, 'r');                       % Target Orbit
+        % Current position
+        plot(pos_k(1), pos_k(2), 'x', 'LineWidth', 5);
+        % Past trajectory
+        plot(pos_traj(1,:), pos_traj(2,:), 'w.', 'LineWidth', 10);
+        % Osculating orbit
+        plot(X, Y, 'g--');                             
+        % Target orbit
+        plot(X_tar, Y_tar, 'r');
+        % Plot force arrow
+        scale = 10^5;
+        if i < N
+            u_k = u(:,i);
+            xArrow = [pos_k(1); pos_k(1) + scale * u_k(1)];
+            yArrow = [pos_k(2); pos_k(2) + scale * u_k(2)];
+            line(xArrow, yArrow);
+        end
         hold off
         
         % Figure properties
