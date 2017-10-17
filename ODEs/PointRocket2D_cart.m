@@ -13,12 +13,12 @@ k_m   =      10^2;              % Fuel consumption coeff. (kg * s^-1)
 
 %% Rescaled ODE
 % Original ODE: m, m/s, kg
-% Scaled ODE: Mm, km/s, kg
-scale = [10^6; 10^6; 10^3; 10^3; 1];
+% Scaled ODE: km, km/s, kg
+scale = [10^3; 10^3; 10^3; 10^3; 1];
 unscale = scale.^-1;
 
 % Scale ODE
-xdot = @(x,u) unscale .* ode(scale .* x, u);
+xdot = @(x,u) unscale .* ode(scale .* x, u, M);
 
 %% ----------------- System ODE -------------------------------------------
 % Coordinate frame origin is center of moon (Polar coordinates)
@@ -32,16 +32,21 @@ xdot = @(x,u) unscale .* ode(scale .* x, u);
 % u(1) -- Input force in X
 % u(2) -- Input force in Y
 
-function [xdot] = ode(x, u)
+function [xdot] = ode(x, u, M)
+    G  = 6.67408 * 10^-11;          % Grav. const. (m^3 * kg^-1 * s^-2)
+    k_m   =      10^2;              % Fuel consumption coeff. (kg * s^-1)
+    u_bar = 30 * 10^4;              % Max. thrust (N)
+
+    
     p = x(1:2);
     m = x(5);
     
-    coeff_grav = mu / (p.' * p)^1.5;
+    coeff_grav = G*M / (p.' * p)^1.5;
     
     xdot = [x(3); ...
             x(4); ...
-            u(1)/m - x(1) * coeff_grav; ...
-            u(2)/m - x(2) * coeff_grav; ...
+            u(1)*u_bar/m - x(1) * coeff_grav; ...
+            u(2)*u_bar/m - x(2) * coeff_grav; ...
             -k_m * (u.' * u)];
 end
 
