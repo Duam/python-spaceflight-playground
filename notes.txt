@@ -1,0 +1,41 @@
+# TODO
+Cartesian model:
+Convert initial guess from polar to cartesian
+-> Force arrow points in wrong direction, something wrong with conversion
+
+Possibly add bounds to states
+Terminal constraints:
+- Orbital height (Distance to origin)
+- Orbital angular velocity (Convert end state to polar and compare)
+
+
+# FOR LATER
+For aeorydamic model:
+https://en.wikipedia.org/wiki/Flight_dynamics
+https://en.wikipedia.org/wiki/Flight_dynamics_(spacecraft)
+https://en.wikipedia.org/wiki/Attitude_control
+
+Add earth-moon system
+Possible tasks:
+-- Find best lift-off time to maximize fuel --
+two separate dynamics
+1. Standing by
+- Entire waiting should occur in the first time sample.
+  -> Increase N to N+1 if timesteps get weird
+- Waits for moon to be at the right place
+2. Actual flight
+- Other N-1 samples
+- Start at earth, fly to the moon, come in proximity of it or orbit it
+
+x(0) = x0
+Optimization variables:
+- 1   Time tau
+  s.t. xdot = 1 -> x(k+1) = x(k) for k=1
+- N-1 States x, Controls u
+  s.t. xdot = f(x,u) -> x(k+1) = f_k(x(k),u(k)) for k = 2, ..., N-1
+-> Multistage problem
+
+Atmospheric model:
+- max at sea level
+- 1/r^2 function
+- wind as noise (for MPC)
