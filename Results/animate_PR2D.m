@@ -13,9 +13,17 @@ function [ ] = animate_PR2D( x_traj )
     h_T = 20;
         
     %% Get trajectory in euclidian coordinate frame (remember scaling)
+    % Get actual values from symbolics
+    x_traj(1,:) = full(x_traj(1,:));
+    x_traj(2,:) = full(x_traj(2,:));
+    x_traj(3,:) = full(x_traj(3,:));
+    x_traj(4,:) = full(x_traj(4,:));
+    x_traj(5,:) = full(x_traj(5,:));
+    
+    % Rescale
     kilo = 10^3;
     micro = 10^-6;
-    x_traj(1,:) = kilo * (R + x_traj(1,:));
+    x_traj(1,:) = R + kilo * x_traj(1,:);
     x_traj(2,:) = pi/2 + micro * (x_traj(2,:)-pi/2); % subtract pi/2 b.c. initial state
     x_traj(3,:) = kilo * x_traj(3,:);
     x_traj(4,:) = micro * x_traj(4,:);
@@ -40,16 +48,22 @@ function [ ] = animate_PR2D( x_traj )
    
     % Get mass
     mass = x_traj(5,:);
-
+    
+    %% Test field
+    [x, u] = PR2D_pol2cart(x_traj, [0;0]);
+    pos = x(1:2,:);
+    vel = [x(3:4,:); zeros(1,N)];
+    mass = x(5,:);
+    
     %% Prepare plotting
     % Compute points for target orbit
     angle = linspace(0, 2*pi, 1000);
-    r_tar = kilo * (R + h_T);
+    r_tar = R + kilo * h_T;
     X_tar = r_tar * cos(angle);
     Y_tar = r_tar * sin(angle);
 
     % Compute animation timescale
-    timeScale = 1 / T;
+    timeScale = 7 / T;
 
     % Get number of steps and step width
     N = length(x_traj(1,:));
@@ -64,9 +78,9 @@ function [ ] = animate_PR2D( x_traj )
     %% Animation
     for i=1:N
         % Current state
-        pos_k = full(pos(:,i));       % Current position
+        pos_k = pos(:,i);       % Current position
         pos_mag = norm(pos_k);        % Distance from Body
-        vel_k = full(vel(:,i));       % Current velocity
+        vel_k = vel(:,i);       % Current velocity
         
         % All states up until now
         pos_traj = [pos(:,1:i), inf(2,N-i)];
@@ -102,7 +116,7 @@ function [ ] = animate_PR2D( x_traj )
         
         % Draw elements
         hold on
-        rectangle('Position', kilo*[-R -R 2*R 2*R], ...
+        rectangle('Position', [-R -R 2*R 2*R], ...
                   'Curvature', [1 1], ...
                   'FaceColor', [0.7 0.7 0.7], ...
                   'LineWidth', 1, ...
