@@ -6,11 +6,11 @@ function [ xs_cart, us_cart ] = PR2D_pol2cart( xs_pol, us_pol )
     
     %% Convert states
     % Extract trajectory components and scale to m, rad, kg, s
-    rs        = xs_pol(1,:);% * scale(1);
-    thetas    = xs_pol(2,:);% * scale(2);
-    rDots     = xs_pol(3,:);% * scale(3);
-    thetaDots = xs_pol(4,:);% * scale(4);
-    ms        = xs_pol(5,:);% * scale(5);
+    rs        = R + xs_pol(1,:) * scale(1);
+    thetas    = pi/2 + xs_pol(2,:) * scale(2);
+    rDots     = xs_pol(3,:) * scale(3);
+    thetaDots = xs_pol(4,:) * scale(4);
+    ms        = xs_pol(5,:) * scale(5);
     
     urs       = us_pol(1,:);
     uthetas   = us_pol(2,:);
