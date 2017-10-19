@@ -110,7 +110,7 @@ function [ ] = animate_PR2D( x_traj, u_traj )
         % Target orbit
         plot(X_tar, Y_tar, 'r');
         % Plot force arrow
-        scale = 10^5;
+        scale = 10^4;
         if i < N
             u_k = u(:,i);
             xArrow = [pos_k(1); pos_k(1) + scale * u_k(1)];
