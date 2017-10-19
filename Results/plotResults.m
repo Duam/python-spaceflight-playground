@@ -7,8 +7,8 @@ run ODEs/PointRocket2D.m
 % X = results.PR2D_sol1.X;
 % U = results.PR2D_sol1.U;
 % results = load('results/PR2D_sol2.mat');
-% X = results.sol.X;
-% U = results.sol.U;
+X = sol.X;
+U = sol.U;
 X = x_star;
 U = u_star;
 
