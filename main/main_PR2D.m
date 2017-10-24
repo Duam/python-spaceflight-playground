@@ -5,7 +5,7 @@ import casadi.*
 % Current working directory must be "ControlledRocket"
 run ODEs/PointRocket2D.m
 
-%% --------------------- Parameters --------------------------
+%% Parameters
 % -- Simulation parameters --
 T = 600;                % Simulation time in seconds
 N = 100;                % Number of samples
@@ -20,17 +20,17 @@ angVel_T = 10^6 * sqrt(mu/(R+10^3*h_T)^3);
 % -- Initial state --
 x0 = [0; 0; 0; 0; m0];
 
-%% ------------------------ System model ----------------------------------
+%% System model
 nx = 5;
 nu = 2;
 x = MX.sym('x', nx, 1);
 u = MX.sym('u', nu, 1);
 ode = Function('ode', {x,u}, {xdot(x,u)});
-%% ---------------------- Stage cost --------------------------------------
+%% Stage cost
 L = u.' * u;
 L = Function('L', {x,u}, {L});
 
-%% ----------------------- Integrators ------------------------------------
+%% Integrators
 nn = 10;   % Integrator steps per step
 h = DT/nn; % Step size of integrator step
 
@@ -48,7 +48,7 @@ for i=1:nn
 end
 L_d = Function('L', {x,u}, {Lk}, {'x','u'}, {'Lk'});
 
-%% ----------------------- Initial guess ----------------------------------
+%% Initial guess
 % -- Load precomputed trajectory as initial guess --
 winit = load('main/guess_PR2D.mat');
 x_g = winit.sol.X;
@@ -159,4 +159,14 @@ x_star = [w_opt(3:7:end), ...
           w_opt(5:7:end), ...
           w_opt(6:7:end), ...
           w_opt(7:7:end)].';
-x_star = [x0, x_star];
+
+% Save the solution as a variable
+param = struct('T', T, ...
+               'N', N, ...
+               'hT', h_T, ...
+               'thetaDotT', angVel_T);
+sol = struct('x0', x0, ...
+             'X', x_star, ...
+             'U', u_star, ...
+             'param', param);
+             
