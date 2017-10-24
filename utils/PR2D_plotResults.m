@@ -22,15 +22,14 @@ function [] = PR2D_plotResults(sol)
     DT = T/N;
 
     % Target altitude
-    hT = param.hT;
+    hT = sol.param.hT;
     % Orbital angular velocity in microradians
-    angVel_T = param.thetaDotT;
+    angVel_T = sol.param.thetaDotT;
 
     % Time axis for plotting
     tAxis = 0:DT:T-DT;
     
     if coordSys == 'pol'
-        
         % Radius of planet
         r_0 =      zeros(1,length(tAxis));
         r_T = hT * ones(1,length(tAxis));
