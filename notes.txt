@@ -1,12 +1,10 @@
 # TODO
 Cartesian model:
-Convert initial guess from polar to cartesian
--> Force arrow points in wrong direction, something wrong with conversion
-
-Possibly add bounds to states
+Conversion of initial guess spits out garbage
 Terminal constraints:
 - Orbital height (Distance to origin)
 - Orbital angular velocity (Convert end state to polar and compare)
+
 
 
 # FOR LATER
