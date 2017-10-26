@@ -5,9 +5,9 @@ function [] = PR2D_plotResults(sol)
 
     % Load parameters
     % Current working directory must be "ControlledRocket"
-    if coordSys == 'pol'
+    if strcmpi(coordSys, 'pol')
         run ODEs/PointRocket2D.m
-    elseif coordSys == 'cart'
+    elseif strcmpi(coordSys, 'cart')
         run ODEs/PointRocket2D_cart.m
     end
 
@@ -29,7 +29,7 @@ function [] = PR2D_plotResults(sol)
     % Time axis for plotting
     tAxis = 0:DT:T-DT;
     
-    if coordSys == 'pol'
+    if strcmpi(coordSys, 'pol')
         % Radius of planet
         r_0 =      zeros(1,length(tAxis));
         r_T = hT * ones(1,length(tAxis));
@@ -99,11 +99,11 @@ function [] = PR2D_plotResults(sol)
         ylabel('$u_r$', 'interpreter', 'latex');
         grid on
         
-    elseif coordSys == 'cart'
+    elseif strcmpi(coordSys, 'cart')
         figure(1);
         clf
         % Plot position
-        subplot(3,2,1);
+        subplot(2,2,1);
         hold on
         plot(x0(1), x0(2), 'o');
         plot(X(1,:), X(2,:));
@@ -111,7 +111,7 @@ function [] = PR2D_plotResults(sol)
         ylabel('$p_y$', 'interpreter', 'latex');
         grid on
         % Plot velocity
-        subplot(3,2,2);
+        subplot(2,2,2);
         hold on
         plot(x0(3), x0(4), 'o');
         plot(X(3,:), X(4,:));
@@ -119,9 +119,9 @@ function [] = PR2D_plotResults(sol)
         ylabel('$v_y$', 'interpreter', 'latex');
         grid on
         % Plot mass
-        subplot(3,2,[5 6]);
+        subplot(2,2,[3 4]);
         hold on
-        plot(tAxis, x(5), 'o');
+        plot(tAxis, X(5,1), 'o');
         plot(tAxis, X(5,:));
         ylabel('$m$', 'interpreter', 'latex');
         grid on
