@@ -13,8 +13,8 @@ DT = T/N;               % Step size
 
 % -- Parameters of target orbit --
 % Target altitude in km
-h = 20;
-R_orbit = 10^-3 * R + h; 
+h_T = 20;
+R_orbit = 10^-3 * R + h_T; 
 % Orbital angular velocity
 angVel_T = sqrt(mu/(10^3 * R_orbit)^3); 
 
@@ -33,19 +33,19 @@ L = Function('L', {x,u}, {L});
 
 %% ----------------------- Integrators ------------------------------------
 nn = 10;   % Integrator steps per step
-h = DT/nn; % Step size of integrator step
+h_T = DT/nn; % Step size of integrator step
 
 % Integration of the ODE
 Xk = x;
 for i=1:nn
-    Xk = rk4step_ode(ode, Xk, u, h);
+    Xk = rk4step_ode(ode, Xk, u, h_T);
 end
 ode_d = Function('ode_d', {x,u}, {Xk}, {'x','u'}, {'xk'});
 
 % Integration of the stage costs
 Lk = 0;
 for i=1:nn
-    Lk = rk4step_L(L, Lk, x, u, h);
+    Lk = rk4step_L(L, Lk, x, u, h_T);
 end
 L_d = Function('L', {x,u}, {Lk}, {'x','u'}, {'Lk'});
 
@@ -166,4 +166,15 @@ x_star = [w_opt(3:7:end), ...
           w_opt(5:7:end), ...
           w_opt(6:7:end), ...
           w_opt(7:7:end)].';
-x_star = [x0, x_star];
+      
+% Save the solution as a variable
+param = struct('T', T, ...
+               'N', N, ...
+               'hT', h_T, ...
+               'thetaDotT', angVel_T, ...
+               'coordSys', 'cart');
+sol = struct('x0', x0, ...
+             'X', x_star, ...
+             'U', u_star, ...
+             'param', param);
+             
