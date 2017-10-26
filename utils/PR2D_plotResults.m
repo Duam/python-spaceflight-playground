@@ -121,7 +121,7 @@ function [] = PR2D_plotResults(sol)
         % Plot mass
         subplot(2,2,[3 4]);
         hold on
-        plot(tAxis, X(5,1), 'o');
+        plot(0, x0(5), 'o');
         plot(tAxis, X(5,:));
         ylabel('$m$', 'interpreter', 'latex');
         grid on
@@ -133,13 +133,13 @@ function [] = PR2D_plotResults(sol)
         subplot(2,1,1);
         hold on
         stairs(tAxis(1:end), U(1,:));
-        ylabel('$u_r$', 'interpreter', 'latex');
+        ylabel('$u_x$', 'interpreter', 'latex');
         grid on
         % Plot angle
         subplot(2,1,2);
         hold on
         stairs(tAxis(1:end), U(2,:));
-        ylabel('$u_r$', 'interpreter', 'latex');
+        ylabel('$u_y$', 'interpreter', 'latex');
         grid on
     end
 end
