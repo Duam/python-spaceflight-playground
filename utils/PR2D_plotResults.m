@@ -86,60 +86,59 @@ function [] = PR2D_plotResults(sol)
         %% Plot controls
         figure(2);
         clf
-        % Plot radius
-        subplot(2,1,1);
+        % Plot radial vs. angular
+        subplot(1,1,1);
+        title('Controls');
         hold on
-        stairs(tAxis(1:end), U(1,:));
-        ylabel('$u_r$', 'interpreter', 'latex');
-        grid on
-        % Plot angle
-        subplot(2,1,2);
-        hold on
-        stairs(tAxis(1:end), U(2,:));
-        ylabel('$u_r$', 'interpreter', 'latex');
+        stairs(U(1,1),U(2,1),'o');
+        stairs(U(1,:),U(2,:));
+        xlabel('$u_r$', 'interpreter', 'latex');
+        ylabel('$u_\theta$', 'interpreter', 'latex');
+        hold off        
         grid on
         
     elseif strcmpi(coordSys, 'cart')
         figure(1);
         clf
         % Plot position
-        subplot(2,2,1);
+        subplot(2,3,1);
+        title('Position');
         hold on
         plot(x0(1), x0(2), 'o');
         plot(X(1,:), X(2,:));
         xlabel('$p_x$', 'interpreter', 'latex');
         ylabel('$p_y$', 'interpreter', 'latex');
         grid on
+        axis equal
         % Plot velocity
-        subplot(2,2,2);
+        subplot(2,3,2);
+        title('Velocity');
         hold on
         plot(x0(3), x0(4), 'o');
         plot(X(3,:), X(4,:));
         xlabel('$v_x$', 'interpreter', 'latex');
         ylabel('$v_y$', 'interpreter', 'latex');
         grid on
+        axis equal
+        % Plot controls (forces)
+        subplot(2,3,3);
+        title('Controls');
+        hold on
+        stairs(U(1,1), U(2,1), 'o');
+        stairs(U(1,:), U(2,:));
+        xlabel('$u_x$', 'interpreter', 'latex');
+        ylabel('$u_y$', 'interpreter', 'latex');
+        hold off
+        grid on
+        axis equal
         % Plot mass
-        subplot(2,2,[3 4]);
+        subplot(2,3,[4 5 6]);
+        title('Mass');
         hold on
         plot(0, x0(5), 'o');
         plot(tAxis, X(5,:));
         ylabel('$m$', 'interpreter', 'latex');
         grid on
 
-        %% Plot controls
-        figure(2);
-        clf
-        % Plot radius
-        subplot(2,1,1);
-        hold on
-        stairs(tAxis(1:end), U(1,:));
-        ylabel('$u_x$', 'interpreter', 'latex');
-        grid on
-        % Plot angle
-        subplot(2,1,2);
-        hold on
-        stairs(tAxis(1:end), U(2,:));
-        ylabel('$u_y$', 'interpreter', 'latex');
-        grid on
     end
 end
