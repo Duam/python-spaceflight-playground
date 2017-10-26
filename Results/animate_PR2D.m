@@ -23,10 +23,10 @@ function [ ] = animate_PR2D( x_traj, u_traj )
     % Rescale
     kilo = 10^3;
     micro = 10^-6;
-    x_traj(1,:) = R + kilo * x_traj(1,:);
-    x_traj(2,:) = pi/2 + micro * (x_traj(2,:)-pi/2); % subtract pi/2 b.c. initial state
-    x_traj(3,:) = kilo * x_traj(3,:);
-    x_traj(4,:) = micro * x_traj(4,:);
+    %x_traj(1,:) = kilo * x_traj(1,:);
+    %x_traj(2,:) = micro * (x_traj(2,:)-pi/2);
+    %x_traj(3,:) = kilo * x_traj(3,:);
+    %x_traj(4,:) = micro * x_traj(4,:);
     
     % Extract trajectory components
     N = length(x_traj(1,:));
