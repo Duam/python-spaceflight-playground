@@ -4,22 +4,16 @@ import casadi.*
 %% Load ODE and parameters
 % Current working directory must be "ControlledRocket"
 run ODEs/PointRocket2D_cart.m
+load('main/guess_PR2D_cart.mat');
 
 %% --------------------- Parameters --------------------------
 % -- Simulation parameters --
-T = 600;                % Simulation time in seconds
-N = 100;                % Number of samples
+T = sol.param.T;                % Simulation time in seconds
+N = sol.param.N;                % Number of samples
 DT = T/N;               % Step size
 
-% -- Parameters of target orbit --
-% Target altitude in km
-h_T = 20;
-R_orbit = 10^-3 * R + h_T; 
-% Orbital angular velocity
-angVel_T = sqrt(mu/(10^3 * R_orbit)^3); 
-
 % -- Initial state --
-x0 = [0; R; 0; 0; m0];
+x0 = sol.x0;
 
 %% ------------------------ System model ----------------------------------
 nx = 5;
@@ -51,7 +45,6 @@ L_d = Function('L', {x,u}, {Lk}, {'x','u'}, {'Lk'});
 
 %% ----------------------- Initial guess ----------------------------------
 % -- Load precomputed trajectory as initial guess --
-load('main/guess_PR2D_cart.mat');
 x_g = sol.X;
 u_g = sol.U;
 
@@ -110,15 +103,25 @@ for k=0:N-1
     ubg = [ubg; zeros(nx,1)];    
 end
 
+% -- Parameters of target orbit --
+% Target altitude in km
+h_T = 20;
+R_orbit = R + 10^3 * h_T; 
+% Orbital angular velocity
+angVel_T = 10^6 * sqrt(mu/R_orbit^3); 
+
 % Intermediate quantities
-p = Xk_end(1:2);
-v = Xk_end(3:4);
-dist      = sqrt(p.' * p);
-dist_err  = dist - R_orbit^2;
-angVel     = (p(1)*v(2) - p(2)*v(1)) / dist;
-angVel_err = angVel - angVel_T;
-radVel     = (p(1)*v(1) + p(2)*v(2)) / dist;
-radVel_err = radVel;
+xend = scale.* Xk_end(:,end);
+p = xend(1:2);
+v = xend(3:4);
+dist2 = p.' * p;
+v_rad2 = (v.' * p)^2 / dist2;
+v_tra2 = v.' * v - v_rad2;
+omega2 = 10^12 * v_tra2 / dist2;
+
+dist_err  = dist2 - R_orbit^2;
+omega_err = angVel_T^2 - omega2;
+v_rad_err = v_rad2;
 
 % End cost
 J   = J - Xk_end(5).' * Xk_end(5);
@@ -129,12 +132,12 @@ lbg = [lbg; 0];
 ubg = [ubg; 0];
 
 % Terminal constraint on the angular velocity
-g = {g{:}, angVel_err};
+g = {g{:}, omega_err};
 lbg = [lbg; 0];
 ubg = [ubg; 0];
 
 % Terminal constraint on radial velocity
-g = {g{:}, radVel_err};
+g = {g{:}, v_rad_err};
 lbg = [lbg; 0];
 ubg = [ubg; 0];
 
