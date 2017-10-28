@@ -1,11 +1,7 @@
 # TODO
 Cartesian model:
-Conversion of initial guess spits out garbage
--> Make new initial guess for cartesian?
-Terminal constraints:
-- Orbital height (Distance to origin)
-- Orbital angular velocity (Convert end state to polar and compare)
-
+- Doesn't work still. But better due to better initial guess (converted 
+  optimal solution from the polar problem) -> analyze
 
 
 # FOR LATER
