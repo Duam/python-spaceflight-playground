@@ -41,7 +41,6 @@ function [ xs_cart, us_cart ] = PR2D_pol2cart( xs_pol, us_pol )
     %% Convert controls
     % Convert to cartesian coordinates (note the corotating reference frame)
     us_cart = [urs; uthetas];
-    %us_cart = [uthetas; urs];
 
     % Rotate into inertial frame
     for i = 1:size(us_pol,2)
