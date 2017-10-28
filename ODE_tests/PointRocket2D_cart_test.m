@@ -34,11 +34,13 @@ ode_d = Function('ode_d', {x,u}, {Xk}, {'x','u'}, {'xk'});
 
 %% Simulate system
 % Controls
-nx_stop = 60 ;
-Ux = [-0.3 * ones(1,nx_stop), zeros(1,N-nx_stop)];
-ny_stop = 60;
-Uy = [0.2 * ones(1,ny_stop), zeros(1,N-ny_stop)];
-U = [Ux; Uy];
+% nx_stop = 80 ;
+% Ux = [zeros(1,(N-nx_stop)/2), -0.5 * ones(1,nx_stop), zeros(1,(N-nx_stop)/2)];
+% ny_stop = 30;
+% Uy = [0.125 * ones(1,ny_stop), zeros(1,N-ny_stop)];
+% U = [Ux; Uy];
+load('Results/PR2D_sol2_convertedToCart.mat', 'sol');
+U = sol.U;
 
 % Simulate
 X(:,1) = x0;
@@ -65,7 +67,7 @@ v_tra = sqrt(v.' * v - v_rad^2);
 % Angular velocity @ end
 omega = 10^6 * v_tra / dist; % must be == angVel_T
 
-disp('Distance: ' + string(dist) + ', target: ' + string(R+10^3*h) + ', Diff: ' + string(R+10^3*h-dist));
+disp('Distance: ' + string(dist) + ', target: ' + string(R+10^3*h_T) + ', Diff: ' + string(R+10^3*h_T-dist));
 disp('omega:    ' + string(omega) + ', target: ' + string(angVel_T) + ', Diff: ' + string(angVel_T - omega));
 disp('RadVel:   ' + string(v_rad) + ', target: ' + string(0) + ', Diff: ' + string(v_rad));
 
@@ -82,3 +84,5 @@ sol = struct('x0', x0, ...
        
 % Plot
 PR2D_plotResults(sol);
+
+save('main/guess_PR2D_cart_tmp.mat', 'sol');
