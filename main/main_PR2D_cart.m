@@ -4,13 +4,20 @@ import casadi.*
 %% Load ODE and parameters
 % Current working directory must be "ControlledRocket"
 run ODEs/PointRocket2D_cart.m
-load('main/guess_PR2D_cart.mat');
+load('main/guess_PR2D_cart_tmp.mat');
 
 %% --------------------- Parameters --------------------------
 % -- Simulation parameters --
 T = sol.param.T;                % Simulation time in seconds
 N = sol.param.N;                % Number of samples
 DT = T/N;               % Step size
+
+% -- Parameters of target orbit --
+% Target altitude in m
+h_T = 20;
+R_orbit = R + 10^3 * h_T; 
+% Orbital angular velocity
+angVel_T = 10^6 * sqrt(mu/R_orbit^3); 
 
 % -- Initial state --
 x0 = sol.x0;
@@ -22,7 +29,8 @@ x = MX.sym('x', nx, 1);
 u = MX.sym('u', nu, 1);
 ode = Function('ode', {x,u}, {xdot(x,u)});
 %% ---------------------- Stage cost --------------------------------------
-L = u.' * u;
+L = u.' * u; % Penalize controls
+% L = L + (x(1:2).' * x(1:2) - 10^-3 * R_orbit); % Reach altitude
 L = Function('L', {x,u}, {L});
 
 %% ----------------------- Integrators ------------------------------------
@@ -102,13 +110,6 @@ for k=0:N-1
     lbg = [lbg; zeros(nx,1)];
     ubg = [ubg; zeros(nx,1)];    
 end
-
-% -- Parameters of target orbit --
-% Target altitude in km
-h_T = 20;
-R_orbit = R + 10^3 * h_T; 
-% Orbital angular velocity
-angVel_T = 10^6 * sqrt(mu/R_orbit^3); 
 
 % Intermediate quantities
 xend = scale.* Xk_end(:,end);
