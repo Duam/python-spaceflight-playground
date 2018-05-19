@@ -9,7 +9,7 @@ There are three important points in space:
 
 ## Inputs
 - $F_T$ the thruster force
-- &mu the gimbal angle
+- &mu; the gimbal angle
 
 ## Disturbances
 - $F_w$ the wind force
