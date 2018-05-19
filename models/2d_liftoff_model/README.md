@@ -15,13 +15,12 @@ There are three important points in space:
 - F<sub>w<\sub>: the wind force
 
 ## States
-- &theta; Angle, measured from the vertical (inertial) plane
-- \dot{&theta;}$ Angular velocity
 - x, y: Position
-- $\dot{x}$ $\dot{y}$ Linear velocit
+- xdot, ydot Linear velocit
+- &theta; Angle, measured from the vertical (inertial) plane
+- &theta;dot$ Angular velocity
 
-# Assumptions:
+# Assumptions/Simplifications:
 - Wind direction stays horizontal
 - Logarithmic wind profile
 - Gravity points down
-- 
