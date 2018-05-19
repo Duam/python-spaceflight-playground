@@ -8,16 +8,16 @@ There are three important points in space:
 - Base: Gimballed thruster force
 
 ## Inputs
-- $F_T$ the thruster force
-- &mu; the gimbal angle
+- F<sub>T<\sub>: the thruster force
+- &mu;: the gimbal angle
 
 ## Disturbances
-- $F_w$ the wind force
+- F<sub>w<\sub>: the wind force
 
 ## States
-- $\ţheta$ Angle, measured from the horizontal (inertial) plane
-- $\dot{\theta}$ Angular velocity
-- $x$, $y$ Position
+- &theta; Angle, measured from the vertical (inertial) plane
+- \dot{&theta;}$ Angular velocity
+- x, y: Position
 - $\dot{x}$ $\dot{y}$ Linear velocit
 
 # Assumptions:
