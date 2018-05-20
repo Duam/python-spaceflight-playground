@@ -175,7 +175,7 @@ if __name__ == '__main__':
 
     # Simulation parameters
     T = 600.0
-    N = 100.0
+    N = 100
     DT = T/N
 
     # Integration parameters 
@@ -198,4 +198,23 @@ if __name__ == '__main__':
     ode_scl_d = cas.Function('ode_scl_d', [x,u], [Xk], ['x','u'], ['xk'])
 
     # Choose controls for simulation
+    us = np.zeros((N,spacecraft.nu))
+    n_r_stop = 60
+    n_theta_stop = 85
     
+    us_r = np.zeros(N)
+    us_r[0:n_r_stop] = 0.1705 * np.ones(n_r_stop)
+    us[:,0] = us_r
+    
+    us_theta = np.zeros(N)
+    us_theta[0:n_theta_stop] = 0.2 * np.ones(n_theta_stop)
+    us[:,1] = us_theta
+    
+    # Simulate the system
+    xs = np.zeros((N,spacecraft.nx))
+    xs[0,:] = spacecraft.x0
+    for k in arange(1,N):
+        x_sim = full(ode_scl_d(xs[k-1,:], u[k-1,:]))
+        xs = np.append(xs, x_sim)
+
+    # TODO: finish simulation, add plotting
