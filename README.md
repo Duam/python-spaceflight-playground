@@ -1,5 +1,2 @@
 # Dependencies
-- python3 with:
- - casadi
- - numpy
- - matplotlib
+python3 with: casadi, numpy, matplotlib
