@@ -12,6 +12,9 @@ class AR1_model:
 
     ##
     # @brief Initialization procedure
+    # @param phi Autoregression parameter
+    # @param mean Mean of the timeseries
+    # @param variance Variance of the timeseries (must be > 0)
     ##
     def __init__(self, phi=0.3, mean=0, variance=1):
         # Process mean
@@ -27,6 +30,19 @@ class AR1_model:
         # Current sample initialization
         self.xCur = mean
         
+    ##
+    # @brief Parameter update function
+    # @param phi Autoregression parameter
+    # @param mean Mean of the timeseries
+    # @param variance Variance of the timeseries (must be > 0)
+    ##
+    def updateParameters(self, phi=0.3, mean=0, variance=1):
+        self.mean = mean
+        self.variance = variance
+        self.phi = phi
+        self.c = self.mean * (1 - self.phi)
+        self.normdist_stddev = np.sqrt((1 - self.phi**2) * self.variance)
+
     ##
     # @brief Wrapper for numpy normal sampler
     ##
