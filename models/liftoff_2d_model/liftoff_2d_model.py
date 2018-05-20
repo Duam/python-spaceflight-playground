@@ -3,25 +3,38 @@
 import casadi as cas
 import numpy as np
 
-class 2d_liftoff_model:
+## 
+# @class liftoff_2d_model
+# @brief Model of a 2d rocket during liftoff while 
+#        considering very simple aerodynamics.
+##
+class liftoff_2d_model:
+  
     ## 
     # @brief Initialization procedure
+    # @param L Distance from base to COM (m)
+    # @param l Distance from base to COP (m)
+    # @param maxThrust Maximum thrust (N)
+    # @param maxGimbal Maximum thrust gimbal angle (rad)
+    # @param m Total mass (kg)
+    # @param I Inertia tensor (around z-axis) (kg*m^2)
     ##
-    def __init__(self):
-        # Distance from base to COM (m)
-        self.L = 20
-        # Distance from base to COP (m)
-        self.l = 10
-        # Maximum thrust (N)
-        self.maxThrust = 100
-        # Maximum gimbal angle (rad)
-        self.maxGimbal = np.pi / 2
+    def __init__(self, L=20, l=10, maxThrust=100, maxGimbal=np.pi/2, m=1000, I=1):
         # Gravitational constant (m/s^2)
         self.g = 9.81
+
+        # Distance from base to COM (m)
+        self.L = L
+        # Distance from base to COP (m)
+        self.l = l
+        # Maximum thrust (N)
+        self.maxThrust = maxThrust
+        # Maximum gimbal angle (rad)
+        self.maxGimbal = maxGimbal
         # Total mass (kg)
-        self.m = 1000
+        self.m = m
         # Inertia tensor (kg*m^2)
-        self.I = 1
+        self.I = I
     
     ##
     # @brief The model dynamics
@@ -52,7 +65,7 @@ class 2d_liftoff_model:
         T = u[0]
         mu = u[1]
 
-        # Get disturbance (only in horizontal direction)
+        # Get disturbing wind force (only in horizontal direction)
         F_W = d
 
         # Compute some intermediate values
