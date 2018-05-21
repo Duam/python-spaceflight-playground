@@ -5,7 +5,7 @@ import casadi as cas
 
 ##
 # @class orbit_2d_polar_model
-# @brief TODO
+# @brief Model of a 2-dimensional point mass spacecraft in polar coordinates.
 ##
 class orbit_2d_polar_model:
 
@@ -49,7 +49,7 @@ class orbit_2d_polar_model:
 
         # Scaling factor
         # km -> m
-        # nrad -> rad
+        # microrad -> rad
         self.scaledown = cas.vertcat(
             1e3,
             1e-6,
@@ -250,6 +250,6 @@ if __name__ == '__main__':
 
     plt.subplot(325)
     plt.plot(tAxis, xs[:,4])
-    plt.ylabel('Mass')
+    plt.ylabel('Mass [kg]')
 
     plt.show()
