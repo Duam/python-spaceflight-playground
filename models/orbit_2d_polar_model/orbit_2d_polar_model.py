@@ -57,7 +57,7 @@ class orbit_2d_polar_model:
             1e-6,
             1
         )
-        self.scaleup = self.scaledown**-1 # Does this work?
+        self.scaleup = self.scaledown**-1
 
     ##
     # @brief The ODE xdot = f(x,u) of the spacecraft
@@ -97,7 +97,7 @@ class orbit_2d_polar_model:
 
         # Compute angular acceleration (in tangential direction)
         # Control term
-        acc_theta_thrust = theta * self.u_max / (m * (r+self.R))
+        acc_theta_thrust = T_theta * self.u_max / (m * (r+self.R))
         # Coriolis term 
         acc_theta_corio = - 2 * rDot * thetaDot / (r+self.R)
         # Unify terms
@@ -119,9 +119,9 @@ class orbit_2d_polar_model:
     # @brief The scaled ODE of the spacecraft. 
     # @param x The scaled state (polar coordinates):
     #          - Altitude (km)
-    #          - Angle from horizontal axis (nrad)
+    #          - Angle from horizontal axis (microrad)
     #          - Radial velocity (km/s)
-    #          - Angular velocity (nrad/s)
+    #          - Angular velocity (microrad/s)
     #          - mass (kg)
     # @param u The controls
     #          - Thrust in radial direction (N)
@@ -130,7 +130,7 @@ class orbit_2d_polar_model:
     ##
     ##
     def dynamics_scaled(self, x_upscaled, u):
-        # Downscale state from (km,nrad,..) to (m,rad,..)
+        # Downscale state from (km,microrad,..) to (m,rad,..)
         x_downscaled = x_upscaled * self.scaledown
 
         # Feed the ODE with the downscaled state
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     n_theta_stop = 85
     
     us_r = np.zeros(N)
-    us_r[0:n_r_stop] = 0.1705 * np.ones(n_r_stop)
+    us_r[0:n_r_stop] = 0.1075 * np.ones(n_r_stop)
     us[:,0] = us_r
     
     us_theta = np.zeros(N)
