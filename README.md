@@ -4,9 +4,8 @@ python3 with: casadi, numpy, matplotlib
 # ToDo
 - [ ] Convert existing matlab code to python
 - - [x] Integrators
-- - [ ] Models
-- - [ ] Model tests 
-- - [ ] Initial guess generation
+- - [x] Polar orbit model & test
+- - [ ] Cartesian orbit model & test
 - - [ ] OCPs
 - - [ ] Utils
 
