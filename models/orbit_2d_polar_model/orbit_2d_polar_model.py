@@ -211,10 +211,45 @@ if __name__ == '__main__':
     us[:,1] = us_theta
     
     # Simulate the system
-    xs = np.zeros((N,spacecraft.nx))
+    xs = cas.DM.zeros((N, spacecraft.nx))
     xs[0,:] = spacecraft.x0
-    for k in arange(1,N):
-        x_sim = full(ode_scl_d(xs[k-1,:], u[k-1,:]))
-        xs = np.append(xs, x_sim)
 
-    # TODO: finish simulation, add plotting
+    for k in range(1,N):
+        xs[k,:] = ode_scl_d(xs[k-1,:],us[k-1,:])
+
+    xs = xs.full()
+
+    # Prepare plotting
+    tAxis = np.linspace(0, T-DT, N)
+    plt.figure(1)
+
+    # Reference altitude [km] & angular velocity [µrad]
+    altitude_ref = 20
+    angVel_ref = 10**6 * np.sqrt(spacecraft.mu / (spacecraft.R + 10**3 * altitude_ref)**3)
+
+    # Plot 
+    plt.subplot(321)
+    plt.plot(tAxis, xs[:,0])
+    plt.plot(tAxis, altitude_ref * np.ones((tAxis.size,1)))
+    plt.ylabel('Altitude [km]')
+
+    plt.subplot(322)
+    plt.plot(tAxis, xs[:,1])
+    plt.plot(tAxis, spacecraft.x0[1].full() * np.ones((tAxis.size,1)))
+    plt.ylabel('Angle [murad]')
+
+    plt.subplot(323)
+    plt.plot(tAxis, xs[:,2])
+    plt.plot(tAxis, spacecraft.x0[2].full() * np.ones((tAxis.size,1)))
+    plt.ylabel('Radial vel. [km/s]')
+
+    plt.subplot(324)
+    plt.plot(tAxis, xs[:,3])
+    plt.plot(tAxis, angVel_ref * np.ones((tAxis.size,1)))
+    plt.ylabel('Angular vel. [murad/s]')
+
+    plt.subplot(325)
+    plt.plot(tAxis, xs[:,4])
+    plt.ylabel('Mass')
+
+    plt.show()
