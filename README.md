@@ -11,3 +11,5 @@ python3 with: casadi, numpy, matplotlib
 
 - [ ] Test for liftoff model
 - [ ] Test for log wind model
+
+- [ ] Add a data folder for precomputed initial guesses (.csv)
