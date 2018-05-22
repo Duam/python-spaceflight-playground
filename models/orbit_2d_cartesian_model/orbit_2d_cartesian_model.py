@@ -33,7 +33,7 @@ class orbit_2d_cartesian_model:
         # Maximum thrust (N)
         self.u_max = 30.0 * 10**4
         # Fuel consumption coefficient (kg/s)
-        self.km = 10**2
+        self.km = 100.0
 
         # Dynamics parameters
 
@@ -52,8 +52,8 @@ class orbit_2d_cartesian_model:
         self.unscale = self.scale**-1
         # Initial state
         self.x0 = cas.vertcat(
-            0.0,
             self.R,
+            0.0,
             0.0,
             0.0,
             self.m0
