@@ -106,14 +106,18 @@ class orbit_2d_polar_model:
         # Compute mass derivative
         mDot = - self.km * (T_r**2 + T_theta**2)
         
+        print(mDot)
+
         # Stack the derivatives
-        return cas.vertcat(
+        xdot = cas.vertcat(
             rDot,
             thetaDot,
             rDDot,
             thetaDDot,
             mDot
         )
+
+        return xdot
 
     ##
     # @brief The scaled ODE of the spacecraft. 
@@ -141,7 +145,7 @@ class orbit_2d_polar_model:
 
 
 ##
-# Execute this script to test the model
+# Execute this script to run the model and to generate a trajectory
 ##    
 if __name__ == '__main__':
 
@@ -216,6 +220,7 @@ if __name__ == '__main__':
 
     for k in range(1,N):
         xs[k,:] = ode_scl_d(xs[k-1,:],us[k-1,:])
+        #print(xs[k,0])
 
     xs = xs.full()
 
