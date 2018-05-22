@@ -33,31 +33,34 @@ class orbit_2d_polar_model:
         # Maximum thrust (N)
         self.u_max = 30.0 * 10**4
         # Fuel consumption coefficient (kg/s)
-        self.km = 10**2
-        # Initial state
-        self.x0 = cas.vertcat(
-            0.0,
-            np.pi / 2.0,
-            0.0,
-            0.0,
-            self.m0
-        )
+        self.km = 100.0
 
         # Dynamics parameters
+
+        # State and control dimension
         self.nx = 5
         self.nu = 2
 
         # Scaling factor
-        # km -> m
-        # microrad -> rad
-        self.scaledown = cas.vertcat(
-            1e3,
-            1e-6,
-            1e3,
-            1e-6,
-            1
+        self.scale = cas.vertcat(
+            1e-3, # m -> km
+            1e+6, # rad -> microrad
+            1e-3, # m/s -> km/s
+            1e+6, # rad/s -> microrad/s
+            1     # kg -> kg
         )
-        self.scaleup = self.scaledown**-1
+        self.unscale = self.scale**-1
+
+        # Initial state
+        self.x0 = cas.vertcat(
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            self.m0
+        )
+        # Scaled initial state
+        self.x0_scaled = self.x0 * self.scale
 
     ##
     # @brief The ODE xdot = f(x,u) of the spacecraft
@@ -105,8 +108,6 @@ class orbit_2d_polar_model:
 
         # Compute mass derivative
         mDot = - self.km * (T_r**2 + T_theta**2)
-        
-        print(mDot)
 
         # Stack the derivatives
         xdot = cas.vertcat(
@@ -133,15 +134,16 @@ class orbit_2d_polar_model:
     # @return The scaled derivative of the state
     ##
     ##
-    def dynamics_scaled(self, x_upscaled, u):
-        # Downscale state from (km,microrad,..) to (m,rad,..)
-        x_downscaled = x_upscaled * self.scaledown
+    def dynamics_scaled(self, x_scaled, u):
+        # Unscale back to (m, rad, ..)
+        x = x_scaled * self.unscale
 
         # Feed the ODE with the downscaled state
-        xdot_downscaled = self.dynamics(x_downscaled, u)
+        xdot = self.dynamics(x, u)
 
-        # Upscale the state derivative
-        return xdot_downscaled * self.scaleup
+        # Scale back to (km, microrad, ..) and return
+        xdot_scaled = xdot * self.scale
+        return xdot_scaled
 
 
 ##
@@ -172,8 +174,9 @@ if __name__ == '__main__':
     print("Max. thrust: " + str(spacecraft.u_max) + " N")
     print("Fuel consumption coeff:" + str(spacecraft.km) + " kg/s")
     print("Initial state: " + str(spacecraft.x0))
-    print("State upscale vector: " + str(spacecraft.scaleup))
-    print("State downscale vector: " + str(spacecraft.scaledown))
+    print("Initial state (scaled): " + str(spacecraft.x0_scaled))
+    print("State scale vector: " + str(spacecraft.scale))
+    print("State unscale vector: " + str(spacecraft.unscale))
     print("Number of states: " + str(spacecraft.nx))
     print("Number of controls: " + str(spacecraft.nu))
 
@@ -189,7 +192,7 @@ if __name__ == '__main__':
     # Create system model with CasADi
     x = cas.MX.sym('x', spacecraft.nx, 1)
     u = cas.MX.sym('u', spacecraft.nu, 1)
-    #ode = cas.Function('ode', [x,u], [spacecraft.dynamics(x,u)])
+    ode = cas.Function('ode', [x,u], [spacecraft.dynamics(x,u)])
     ode_scl = cas.Function('ode_scl', [x,u], [spacecraft.dynamics_scaled(x,u)])
 
     # Discretize spacecraft dynamics using rk4
@@ -198,7 +201,7 @@ if __name__ == '__main__':
         #Xk = rk4step_ode(ode, Xk, u, h)
         Xk = rk4step_ode(ode_scl, Xk, u, h)
 
-    #ode_d = cas.Function('ode_d', [x,u], [Xk], ['x','u'], ['xk'])
+    ode_d = cas.Function('ode_d', [x,u], [Xk], ['x','u'], ['xk'])
     ode_scl_d = cas.Function('ode_scl_d', [x,u], [Xk], ['x','u'], ['xk'])
 
     # Choose controls for simulation
@@ -216,11 +219,12 @@ if __name__ == '__main__':
     
     # Simulate the system
     xs = cas.DM.zeros((N, spacecraft.nx))
-    xs[0,:] = spacecraft.x0
+    #xs[0,:] = spacecraft.x0
+    xs[0,:] = spacecraft.x0_scaled
 
     for k in range(1,N):
+        #xs[k,:] = ode_d(xs[k-1,:],us[k-1,:])
         xs[k,:] = ode_scl_d(xs[k-1,:],us[k-1,:])
-        #print(xs[k,0])
 
     xs = xs.full()
 
