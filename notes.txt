@@ -1,3 +1,6 @@
+## Deprecated
+But I still keep this file for future ideas
+
 # TODO
 Cartesian model:
 - Doesn't work still. But better due to better initial guess (converted 
