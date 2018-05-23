@@ -236,6 +236,9 @@ if __name__ == '__main__':
     altitude_ref = 20
     angVel_ref = 10**6 * np.sqrt(spacecraft.mu / (spacecraft.R + 10**3 * altitude_ref)**3)
 
+    print("Reference altitude: " + str(altitude_ref))
+    print("Reference angular velocity: " + str(angVel_ref))
+
     # Plot 
     plt.subplot(321)
     plt.plot(tAxis, xs[:,0])
