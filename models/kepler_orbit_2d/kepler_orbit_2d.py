@@ -7,6 +7,12 @@
 
 import numpy as np
 
+import sys, os
+sys.path.append(os.path.realpath('../../'))
+sys.path.append(os.getcwd())
+
+from utils.conversion import state_pol2cart
+
 ##
 # @class kepler_orbit_2d
 # @brief Representation of a 2d keplerian orbit. Convenience class
@@ -32,11 +38,57 @@ class kepler_orbit_2d:
         
         # Orbital elements
 
-        # Eccentricity vector
-        self.e = np.array([0,0])
-        # Specific orbital angular momentum
-        self.h = np.array([0,0])
+        # Eccentricity vector (in 2d only the first two elements are non-zero)
+        self.e = np.array([0,0,0])
+        # Specific orbital angular momentum (in 2d only the last element is non-zero)
+        self.h = np.array([0,0,0])
         
+    ##
+    # @brief Returns a string that contains the orbital elements
+    ##
+    def toString(self):
+        return "e=" + str(self.e) + ", h=" + str(self.h)
+
+
+    ##
+    # @brief Setter for the orbital elements
+    # @param e Eccentricity vector (3x1)
+    # @param h Specific orbital angular momentum vector (3x1)
+    # @return Nothing
+    ##
+    def setOrbitalElements(self, e, h):
+        self.e = e
+        self.h = h
+
+    ##
+    # @brief Computes kepler elements from common ellipse parameters.
+    # @param e Eccentricity (Scalar value)
+    # @param angle Angle of the orbit
+    # @param a Big semi-major axis
+    # @return e Eccentricty vector
+    # @return h Specific orbital angular momentum
+    ## 
+    def fromEllipseParams(self, e, angle, a):
+        
+        # Compute semi-latus rectup
+        p = a * (1 - e**2)
+
+        # Compute norm of specific orbital angular momentum
+        h = np.sqrt(p * self.mu)
+
+        # Since we are in 2d, that's enough for to momentum vector
+        self.h = np.array([0, 0, h])
+
+        # Compute elements of the eccentricity vector
+        e_x = e * np.cos(angle)
+        e_y = e * np.sin(angle)
+
+        # Since we are in 2d, that's enought for the eccentricity vector
+        self.e = np.array([e_x, e_y, 0])
+
+        # return
+        return self.e, self.h
+
 
     ##
     # @brief Computes kepler elements from cartesian state vector.
@@ -48,7 +100,7 @@ class kepler_orbit_2d:
     # @return e eccentricity vector
     # @return h specific orbital angular momentum
     ##
-    def fromCartesianState (xPos, yPos, xVel, yVel):
+    def fromCartesianState (self, xPos, yPos, xVel, yVel):
 
         # Expand dimensionality of position and velocity (required for cross product)
         pos = np.array([xPos, yPos, 0])
@@ -64,8 +116,8 @@ class kepler_orbit_2d:
 
 
     ##
-    # @brief TODO Computes kepler elementes from polar state vector.
-    #        Updates the internal orbit parameters
+    # @brief Computes kepler elementes from polar state vector.
+    #        Updates the internal orbit parameters. TODO COULD BE OPTIMIZED.
     # @param rho
     # @param theta
     # @param rhoDot
@@ -73,8 +125,20 @@ class kepler_orbit_2d:
     # @return e eccentricity vector
     # @return h specific orbital angular momentum
     ##
-    def fromPolarState (rho, theta, rhoDot, thetaDot):
-        # TODO
+    def fromPolarState (self, rho, theta, rhoDot, thetaDot):
+
+        # Convert polar coordinates to cartesian coordinates
+        x_pol = np.array([rho, theta, rhoDot, thetaDot])
+        x_cart = state_pol2cart(x_pol)
+        
+        # Get the vector elements
+        xPos = x_cart[0]
+        yPos = x_cart[1]
+        xVel = x_cart[2]
+        yVel = x_cart[3]
+
+        # Compute orbital elements and return
+        self.fromCartesianState(xPos, yPos, xVel, yVel)
         return self.e, self.h
 
 
@@ -85,17 +149,14 @@ class kepler_orbit_2d:
     # @param N Number of samples
     # @return An Nx2 vector representing the discretized orbit
     ##
-    def discretize (N):
-
-        # Prepare samples container
-        samples = np.zeros((N,2))
+    def discretize (self, N=360):
 
         # Precompute norms
         h_norm = np.linalg.norm(self.h)
         e_norm = np.linalg.norm(self.e)
 
         # Compute semi-latus rectum
-        p = h_norm**2 / mu
+        p = h_norm**2 / self.mu
 
         # Compute big semi-axis (a) and small semi-axis (b)
         a = p / (1 - e_norm**2)
@@ -110,6 +171,9 @@ class kepler_orbit_2d:
         beta = np.arctan2(self.e[1], self.e[0])
         sb = np.sin(beta)
         cb = np.cos(beta)
+
+        # Prepare samples container
+        samples = np.zeros((N,2))
 
         # Discretize the ellipse
         angles = np.linspace(0, 2*np.pi, N)
@@ -128,4 +192,39 @@ class kepler_orbit_2d:
 # Run this script to test the orbit functions
 ##
 if __name__ == '__main__':
-    print("TODO")
+
+    # Import plotting library
+    import matplotlib.pyplot as plt
+
+    # Create an orbit instance
+    orbit = kepler_orbit_2d()
+
+    # Print parameters
+    print("Orbit parameters:")
+    print("Eccentricity vector: " + str(orbit.e))
+    print("Angular momentum vector: " + str(orbit.h))
+
+    # Set the orbit using the orbital parameters directly
+    e = np.array([0.99, 0.0, 0])
+    h = np.array([0, 0, 1])
+
+    orbit.setOrbitalElements(e,h)
+    print(orbit.toString())
+    samples_0 = orbit.discretize()
+
+    # Set the orbit using polar state vector
+    orbit.fromPolarState(20000.0, 0.0, 0.0, 0.00095046751314)
+    print(orbit.toString())
+    samples_1 = orbit.discretize()
+
+    # Set the orbit using ellipse parameters
+    orbit.fromEllipseParams(0.01, 0.0, 1)
+    print(orbit.toString())
+    samples_2 = orbit.discretize()
+    
+    # Plot orbit
+    #plt.plot(samples_0[:,0], samples_0[:,1])
+    #plt.plot(samples_1[:,0], samples_1[:,1])
+    plt.plot(samples_2[:,0], samples_2[:,1])
+
+    plt.show()
