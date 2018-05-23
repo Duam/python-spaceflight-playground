@@ -8,10 +8,9 @@ python3 with: casadi, numpy, matplotlib
 - - [x] Cartesian orbit model & test
 - - [ ] OCPs
 - - [ ] Utils
-
-- [ ] Test for liftoff model
-- [ ] Test for log wind model
-
-- [x] Fix polar model initial state scaling
-
+- - [ ] Get data from old .mat files for comparing results
+- [x] Test for liftoff model
+- [ ] Check liftoff model equations (particularly torque and thrust)
+- [x] Test for log wind model
+- [ ] Test for kepler orbit model
 - [ ] Add a data folder for precomputed initial guesses (.csv)
