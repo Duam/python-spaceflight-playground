@@ -71,12 +71,7 @@ def state_pol2cart (x_pol):
     yVel = vel[1]
 
     # Stack them into a vector
-    x_cart = np.vertcat(
-        xPos,
-        yPos,
-        xVel,
-        yVel
-    )
+    x_cart = np.array([xPos, yPos, xVel, yVel])
 
     return x_cart
 
