@@ -11,7 +11,7 @@ import sys, os
 sys.path.append(os.path.realpath('../../'))
 sys.path.append(os.getcwd())
 
-from utils.conversion import state_pol2cart
+from utils.conversion import pol2cart, state_pol2cart
 
 ##
 # @class kepler_orbit_2d
@@ -145,44 +145,43 @@ class kepler_orbit_2d:
     ##
     # @brief Discretizes the orbit into a bunch of positions.
     #        Mainly used for plotting. Could also be used for
-    #        pathfollowing (?). COULD BE OPTIMIZED.
+    #        pathfollowing (?).
     # @param N Number of samples
     # @return An Nx2 vector representing the discretized orbit
     ##
     def discretize (self, N=360):
 
         # Precompute norms
-        h_norm = np.linalg.norm(self.h)
         e_norm = np.linalg.norm(self.e)
+        h_norm = np.linalg.norm(self.h)
 
         # Compute semi-latus rectum
         p = h_norm**2 / self.mu
 
-        # Compute big semi-axis (a) and small semi-axis (b)
-        a = p / (1 - e_norm**2)
-        b = np.sqrt(p*a)
-
-        # Compute ellipse midpoint coordinates
-        pos_pe =   self.e * p / (e_norm * (1 + e_norm))
-        pos_ap = - self.e * p / (e_norm * (1 - e_norm))
-        pos_mid = (pos_ap + pos_pe) / 2.0
-
-        # Compute rotation of the ellipse (and precompute sin, cos)
+        # Compute rotation of the ellipse
         beta = np.arctan2(self.e[1], self.e[0])
-        sb = np.sin(beta)
-        cb = np.cos(beta)
-
+        
         # Prepare samples container
         samples = np.zeros((N,2))
 
         # Discretize the ellipse
         angles = np.linspace(0, 2*np.pi, N)
         for k in range(N):
-            sa = np.sin(angles[k])
-            ca = np.cos(angles[k])
+            # Get current angle
+            theta = angles[k]
+            
+            # Compute radius at current angle ("orbit equation")
+            rho = p / (1 + e_norm * np.cos(theta))
 
-            samples[k,0] = pos_mid[0] + (a * ca * cb - b * sa * sb)
-            samples[k,1] = pos_mid[1] + (a * ca * sb + b * sa * cb)
+            # Rotate the orbit clockwise
+            theta = theta + beta
+
+            # Convert into cartesian coordinates
+            pos = pol2cart(theta, rho)
+
+            # Store coordinates in container
+            samples[k,0] = pos[0]
+            samples[k,1] = pos[1]
 
         # Return the discretized orbit
         return samples
@@ -205,26 +204,29 @@ if __name__ == '__main__':
     print("Angular momentum vector: " + str(orbit.h))
 
     # Set the orbit using the orbital parameters directly
-    e = np.array([0.99, 0.0, 0])
-    h = np.array([0, 0, 1])
+    e = np.array([0.3, 0.3, 0])
+    h = np.array([0, 0, 3000000])
 
     orbit.setOrbitalElements(e,h)
     print(orbit.toString())
     samples_0 = orbit.discretize()
 
     # Set the orbit using polar state vector
-    orbit.fromPolarState(20000.0, 0.0, 0.0, 0.00095046751314)
+    orbit.fromPolarState(orbit.R + 20000.0, 0.0, 0.0, 0.00095046751314)
     print(orbit.toString())
     samples_1 = orbit.discretize()
 
     # Set the orbit using ellipse parameters
-    orbit.fromEllipseParams(0.01, 0.0, 1)
+    orbit.fromEllipseParams(0.1, 0.0, 1.0)
     print(orbit.toString())
     samples_2 = orbit.discretize()
     
     # Plot orbit
-    #plt.plot(samples_0[:,0], samples_0[:,1])
-    #plt.plot(samples_1[:,0], samples_1[:,1])
+    plt.plot(samples_0[:,0], samples_0[:,1])
+    plt.plot(samples_1[:,0], samples_1[:,1])
     plt.plot(samples_2[:,0], samples_2[:,1])
 
+    #plt.xlim([-2,2])
+    #plt.ylim([-2,2])
+    plt.grid(True)
     plt.show()
