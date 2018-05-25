@@ -48,7 +48,7 @@ h = DT/nn
 
 # Values for terminal constraints
 altitude_T = 20 # [km]
-angVel_T = 10**6 * np.sqrt(spacecraft.mu / (spacecraft.R + 10**3 * altitude_T)**3)
+angVel_T = 10**3 * np.sqrt(spacecraft.mu / (spacecraft.R + 10**3 * altitude_T)**3)
 
 # Print out values
 print("== Terminal values ==")
@@ -68,7 +68,7 @@ F = cas.Function('F', [x,u], [Xk], ['x','u'], ['xk'])
 
 # Create stage cost for the OCP
 l = u[0]**2 + u[1]**2
-l = cas.Function('l', [x,u], [l])
+l = cas.Function('l', [x,u], [l], ['x','u'], ['l'])
 
 # Create an integrator for the stage cost
 Lk = 0
@@ -100,6 +100,7 @@ xs_init = xs.full()
 print("== Initial guess ==")
 print("xs_init size: " + str(xs_init.shape))
 print("us_init size: " + str(us_init.shape))
+print(xs_init)
 print("Initial guess computed. Now starting creation of OCP.")
 
 # Create the optimization variables
@@ -140,18 +141,18 @@ for k in range(N):
     Xk = cas.MX.sym('X_' + str(k+1), spacecraft.nx, 1)
     w = cas.vertcat(w, Xk)
     lbw_k = cas.vertcat(
-        0,
+        0.0,
         -cas.inf,
         -cas.inf,
         -cas.inf,
-        spacecraft.me
+        spacecraft.me * spacecraft.scale[4]
     )
     ubw_k = cas.vertcat(
         cas.inf,
         cas.inf,
         cas.inf,
         cas.inf,
-        spacecraft.m0
+        spacecraft.m0 * spacecraft.scale[4]
     )
     lbw = cas.vertcat(lbw, lbw_k)
     ubw = cas.vertcat(ubw, ubw_k)
@@ -169,7 +170,7 @@ lbg = cas.vertcat(lbg, altitude_T)
 ubg = cas.vertcat(ubg, altitude_T)
 
 # Terminal constraint on radial velocity
-g = cas.vertcat(g, Xk_end[1])
+g = cas.vertcat(g, Xk_end[2])
 lbg = cas.vertcat(lbg, 0)
 ubg = cas.vertcat(ubg, 0)
 
@@ -198,7 +199,7 @@ nlp['g'] = g
 
 opts = {}
 #opts['ipopt.print_level'] = 0
-#opts['ipopt.print_info_string'] = 'yes'
+opts['ipopt.print_info_string'] = 'yes'
 solver = cas.nlpsol('solver', 'ipopt', nlp, opts)
 
 # Solve the NLP
@@ -212,7 +213,20 @@ solver_out = solver(**solver_in)
 print("== OCP solved ==")
 
 # Extract results
-x_opt = solver_out['x']
-print("x_opt size: " + str(x_opt.shape) + ", type: " + str(type(x_opt)))
+sol = solver_out['x']
+print("sol size: " + str(sol.shape) + ", type: " + str(type(sol)))
 
-print(x_opt)
+u_opt = cas.DM.zeros((N,spacecraft.nu))
+x_opt = cas.DM.zeros((N,spacecraft.nx))
+
+nxnu = spacecraft.nx + spacecraft.nu
+
+u_opt[:,0] = sol[0::nxnu]
+u_opt[:,1] = sol[1::nxnu]
+x_opt[:,0] = sol[2::nxnu]
+x_opt[:,1] = sol[3::nxnu]
+x_opt[:,2] = sol[4::nxnu]
+x_opt[:,3] = sol[5::nxnu]
+x_opt[:,4] = sol[6::nxnu]
+
+# Write to .xml file
