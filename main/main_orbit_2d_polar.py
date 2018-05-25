@@ -159,8 +159,8 @@ for k in range(N):
 
     # Equality constraints to match intervals
     g = cas.vertcat(g, Xk_end - Xk)
-    lbg = cas.vertcat(lbg, cas.MX.zeros(spacecraft.nx, 1))
-    ubg = cas.vertcat(ubg, cas.MX.zeros(spacecraft.nx, 1))
+    lbg = cas.vertcat(lbg, cas.DM.zeros(spacecraft.nx, 1))
+    ubg = cas.vertcat(ubg, cas.DM.zeros(spacecraft.nx, 1))
 
 
 # Terminal constraint on altitude
@@ -180,29 +180,39 @@ ubg = cas.vertcat(ubg, angVel_T)
 
 # Print debug message
 print("== OCP created ==")
-print("w size: " + str(w.shape) + ", should be: " + str(N*spacecraft.nx + N*spacecraft.nu))
-print("w0 size: " + str(w0.shape)  + ", should be: " + str(N*spacecraft.nx + N*spacecraft.nu))
-print("lbw size: " + str(lbw.shape))
-print("ubw size: " + str(ubw.shape))
-print("J size: " + str(J.shape) + ", should be: 1")
-print("g size: " + str(g.shape))
-print("lbg size: " + str(lbw.shape))
-print("ubg size: " + str(ubg.shape))
+print("w size: " + str(w.shape) + ", type: " + str(type(w)))
+print("w0 size: " + str(w0.shape)  + ", type: " + str(type(w0)))
+print("lbw size: " + str(lbw.shape) + ", type: " + str(type(lbw)))
+print("ubw size: " + str(ubw.shape) + ", type: " + str(type(ubw)))
+print("J size: " + str(J.shape) + ", type: " + str(type(J)))
+print("g size: " + str(g.shape) + ", type: " + str(type(g)))
+print("lbg size: " + str(lbg.shape)  + ", type: " + str(type(lbg)))
+print("ubg size: " + str(ubg.shape) + ", type: " + str(type(ubg)))
 print("Setting up and starting solver")
 
 # Create an NLP solver
-nlp = {
-    'f': J,
-    'x': w,
-    'g': g
-}
-solver = cas.nlpsol('solver', 'ipopt', nlp)
+nlp = {}
+nlp['f'] = J
+nlp['x'] = w
+nlp['g'] = g
+
+opts = {}
+#opts['ipopt.print_level'] = 0
+#opts['ipopt.print_info_string'] = 'yes'
+solver = cas.nlpsol('solver', 'ipopt', nlp, opts)
 
 # Solve the NLP
-sol = solver({
-    'x0': w0,
-    'lbx': lbw,
-    'ubx': ubw,
-    'lbg': lbg,
-    'ubg': ubg
-})
+solver_in = {}
+solver_in['x0'] = w0
+solver_in['lbx'] = lbw
+solver_in['ubx'] = ubw
+solver_in['lbg'] = lbg
+solver_in['ubg'] = ubg
+solver_out = solver(**solver_in)
+print("== OCP solved ==")
+
+# Extract results
+x_opt = solver_out['x']
+print("x_opt size: " + str(x_opt.shape) + ", type: " + str(type(x_opt)))
+
+print(x_opt)
