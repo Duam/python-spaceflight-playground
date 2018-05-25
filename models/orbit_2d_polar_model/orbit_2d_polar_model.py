@@ -44,10 +44,10 @@ class orbit_2d_polar_model:
         # Scaling factor
         self.scale = cas.vertcat(
             1e-3, # m -> km
-            1e+6, # rad -> microrad
+            1e+3, # rad -> millirad
             1e-3, # m/s -> km/s
-            1e+6, # rad/s -> microrad/s
-            1     # kg -> kg
+            1e+3, # rad/s -> millirad/s
+            1e-3  # kg -> t
         )
         self.unscale = self.scale**-1
 
