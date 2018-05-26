@@ -221,10 +221,15 @@ if __name__ == '__main__':
     print(orbit.toString())
     samples_2 = orbit.discretize()
     
+    orbit.fromCartesianState(0.0, orbit.R + 20000.0, 1500.0, 0.0)
+    print(orbit.toString())
+    samples_3 = orbit.discretize()
+
     # Plot orbit
-    plt.plot(samples_0[:,0], samples_0[:,1])
+    #plt.plot(samples_0[:,0], samples_0[:,1])
     plt.plot(samples_1[:,0], samples_1[:,1])
-    plt.plot(samples_2[:,0], samples_2[:,1])
+    #plt.plot(samples_2[:,0], samples_2[:,1])
+    plt.plot(samples_3[:,0], samples_3[:,1])
 
     #plt.xlim([-2,2])
     #plt.ylim([-2,2])
