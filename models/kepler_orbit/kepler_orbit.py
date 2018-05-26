@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 ##
-# @file kepler_orbit_2d.py
+# @file kepler_orbit.py
 # @author Paul Daum
 ##
 
@@ -14,12 +14,12 @@ sys.path.append(os.getcwd())
 from utils.conversion import pol2cart, state_pol2cart
 
 ##
-# @class kepler_orbit_2d
-# @brief Representation of a 2d keplerian orbit. Convenience class
+# @class kepler_orbit
+# @brief Representation of a keplerian orbit. Convenience class
 #        for easy computation of kepler elements from cartesian state vector.
 #        Should later be compatible with polar state vector.
 ##
-class kepler_orbit_2d:
+class kepler_orbit:
 
     ##
     # @brief Initialization procedure
@@ -196,7 +196,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     # Create an orbit instance
-    orbit = kepler_orbit_2d()
+    orbit = kepler_orbit()
 
     # Print parameters
     print("Orbit parameters:")

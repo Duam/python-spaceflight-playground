@@ -4,10 +4,10 @@ import numpy as np
 import casadi as cas
 
 ##
-# @class orbit_2d_cartesian_model
+# @class orbit_cartesian_model
 # @brief Model of a 2-dimensional point mass spacecraft in cartesian coordinates.
 ##
-class orbit_2d_cartesian_model:
+class orbit_cartesian_model:
 
     ##
     # @brief Initialization procedure
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     from integrators.rk4step import rk4step_ode
 
     # Create a spacecraft instance
-    spacecraft = orbit_2d_cartesian_model()
+    spacecraft = orbit_cartesian_model()
 
     # Print some parameters
     print("Universe parameters:")

@@ -4,11 +4,11 @@ import casadi as cas
 import numpy as np
 
 ## 
-# @class liftoff_2d_model
+# @class liftoff_model
 # @brief Model of a 2d rocket during liftoff while 
 #        considering very simple aerodynamics.
 ##
-class liftoff_2d_model:
+class liftoff_model:
   
     ## 
     # @brief Initialization procedure
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     from integrators.rk4step import rk4step_ode
 
     # Create a spacecraft instance
-    spacecraft = liftoff_2d_model()
+    spacecraft = liftoff_model()
 
     # Print some parameters
     print("Spacecraft parameters:")
