@@ -220,3 +220,5 @@ if __name__ == '__main__':
 
     # Run animator
     animator.run(fps=1)
+
+    # TODO load pre-optimized trajectory from xml
