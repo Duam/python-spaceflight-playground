@@ -75,9 +75,12 @@ class orbit_animator:
     #        matplotlib.animation
     ##
     def animation_init(self):
+
         # Line plot for the trajectory
         self.trajectory, = self.ax.plot([], [], 'o-', lw=2)
+        self.trajectory_data = [[self.xPositions[0]],[self.yPositions[0]]]
         self.trajectory.set_data([], [])
+
         return self.trajectory
 
     ## 
@@ -86,9 +89,12 @@ class orbit_animator:
     # @param i Index of the data
     ## 
     def animation_main(self,i):
-        lineX = [self.xPositions[i], self.xPositions[i-1]]
-        lineY = [self.yPositions[i], self.yPositions[i-1]]
-        self.trajectory.set_data(lineX, lineY)
+
+        # Line plot for trajectory
+        self.trajectory_data[0].append(self.xPositions[i])
+        self.trajectory_data[1].append(self.yPositions[i])
+        self.trajectory.set_data(self.trajectory_data[0], self.trajectory_data[1])
+        
         return self.trajectory
 
     ##
