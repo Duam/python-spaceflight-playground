@@ -34,6 +34,12 @@ class orbit_animator:
         self.T = params['T']
         self.N = params['N']
 
+        # Celestial body radius
+        self.R = params['body_radius']
+
+        # Target orbit
+        self.orbit_target = params['target_orbit']
+
         # Are the trajectories in cartesian coordinates?
         self.coordsAreCartesian = params['isCartesian']
 
@@ -69,33 +75,89 @@ class orbit_animator:
         )
         self.ax.grid()
 
+        ## == STATIC PLOT ELEMENTS ==
+        # Target orbit
+        orbit_target_samples = self.orbit_target.discretize()
+        orbit_target_plot, = self.ax.plot(
+            orbit_target_samples[:,0], 
+            orbit_target_samples[:,1], 
+            '-', 
+            color='red',
+            lw=2
+        )
+        
+        # Circle for celestial body
+        celestial_body_plot = plt.Circle(
+            (0,0), 
+            self.R,
+            color='grey', 
+            lw=2, 
+            fill=True
+        )
+        self.ax.add_patch(celestial_body_plot)
 
-    ##
-    # @brief Initializes all objects in the plot. Is used by
-    #        matplotlib.animation
-    ##
-    def animation_init(self):
 
+        ## == DYNAMIC PLOT ELEMENTS ==
         # Line plot for the trajectory
-        self.trajectory, = self.ax.plot([], [], 'o-', lw=2)
-        self.trajectory_data = [[self.xPositions[0]],[self.yPositions[0]]]
-        self.trajectory.set_data([], [])
+        self.trajectory = [[self.xPositions[0]],[self.yPositions[0]]]
+        self.trajectory_plot, = self.ax.plot(
+            [], 
+            [], 
+            'o-', 
+            lw=2
+        ) 
 
-        return self.trajectory
+        # Osculating orbit
+        self.orbit_osculating = orbit.kepler_orbit()
+        self.orbit_osculating.fromCartesianState(
+            self.xPositions[0],
+            self.yPositions[0],
+            self.xVelocities[0],
+            self.yVelocities[0]
+        )
+        orbit_osculating_samples = self.orbit_osculating.discretize()
+        self.orbit_osculating_plot, = self.ax.plot(
+            orbit_osculating_samples[:,0],
+            orbit_osculating_samples[:,1],
+            '-',
+            color='green',
+            lw=2
+        )
+
 
     ## 
-    # @brief Updates all the objects in the plot. Is used by 
+    # @brief Updates all the dynamic objects in the plot. Is used by 
     #        matplotlib.animation
     # @param i Index of the data
     ## 
     def animation_main(self,i):
 
         # Line plot for trajectory
-        self.trajectory_data[0].append(self.xPositions[i])
-        self.trajectory_data[1].append(self.yPositions[i])
-        self.trajectory.set_data(self.trajectory_data[0], self.trajectory_data[1])
+        self.trajectory[0].append(self.xPositions[i])
+        self.trajectory[1].append(self.yPositions[i])
+        self.trajectory_plot.set_data(
+            self.trajectory[0], 
+            self.trajectory[1]
+        )
         
-        return self.trajectory
+        # Line plot for osculating orbit
+        self.orbit_osculating.fromCartesianState(
+            self.xPositions[i],
+            self.yPositions[i],
+            self.xVelocities[i],
+            self.yVelocities[i]
+        )
+        print(self.orbit_osculating.toString())
+        orbit_osculating_samples = self.orbit_osculating.discretize()
+        self.orbit_osculating_plot.set_data(
+            orbit_osculating_samples[:,0],
+            orbit_osculating_samples[:,1]
+        )
+
+        #print(orbit_osculating_samples)
+
+        return self.trajectory_plot#, self.orbit_osculating_plot
+
 
     ##
     # @brief Creates the animation and shows it
@@ -107,8 +169,7 @@ class orbit_animator:
             fig = self.fig,
             func = self.animation_main,
             frames = np.arange(1,self.N),
-            interval = 100/fps,
-            init_func = self.animation_init
+            interval = 100/fps
         )
 
         # Save to file if needed
@@ -127,6 +188,7 @@ if __name__ == '__main__':
     # Create a trajectory
     T = 10.0
     N = 10
+    R = 5
 
     xPoses = [0,1,2,3,4,5,6,7,8,9] 
     yPoses = [9,8,7,6,5,4,3,2,1,0]
@@ -135,10 +197,16 @@ if __name__ == '__main__':
     xForces = [0,0,0,0,0,0,0,0,0,0]
     yForces = [0,0,0,0,0,0,0,0,0,0]
 
+    # Create a target orbit
+    orbit_target = orbit.kepler_orbit()
+    orbit_target.fromEllipseParams(0.3, 0.0, 3)
+
     # Save trajectory in a dictionary
     params = {}
     params['T'] = T
     params['N'] = N
+    params['body_radius'] = R
+    params['target_orbit'] = orbit_target
     params['isCartesian'] = True
     params['xPositions'] = xPoses
     params['yPositions'] = yPoses
@@ -151,4 +219,4 @@ if __name__ == '__main__':
     animator = orbit_animator(params)
 
     # Run animator
-    animator.run(10)
+    animator.run(fps=1)
