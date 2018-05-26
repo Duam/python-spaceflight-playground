@@ -46,7 +46,7 @@ class orbit_cartesian_model:
             1e-3, # m -> km
             1e-3, # m/s -> km/s
             1e-3, # m/s -> km/s
-            1    # kg -> kg
+            1     # kg -> kg
         )
         # Un-scaling factor
         self.unscale = self.scale**-1
@@ -181,36 +181,28 @@ if __name__ == '__main__':
     x = cas.MX.sym('x', spacecraft.nx, 1)
     u = cas.MX.sym('u', spacecraft.nu, 1)
     #ode = cas.Function('ode', [x,u], [spacecraft.dynamics(x,u)])
-    ode_scl = cas.Function('ode_scl', [x,u], [spacecraft.dynamics_scaled(x,u)])
+    f = cas.Function('f', [x,u], [spacecraft.dynamics_scaled(x,u)])
 
     # Discretize spacecraft dynamics using rk4
     Xk = x
     for k in range(nn):
-        #Xk = rk4step_ode(ode, Xk, u, h)
-        Xk = rk4step_ode(ode_scl, Xk, u, h)
-
-    #ode_d = cas.Function('ode_d', [x,u], [Xk], ['x','u'], ['xk'])
-    ode_scl_d = cas.Function('ode_scl_d', [x,u], [Xk], ['x','u'], ['xk'])
+        Xk = rk4step_ode(f, Xk, u, h)
+    F = cas.Function('F', [x,u], [Xk], ['x','u'], ['xk'])
 
     # Choose controls for simulation
     us = np.zeros((N,spacecraft.nu))
-    n_x_stop = 20
-    n_y_stop = 60
+    n_x_stop = 25
+    n_y_stop = 50
     
-    us_x = np.zeros(N)
-    us_x[0:n_x_stop] = 0.0 * np.ones(n_x_stop)
-    us[:,0] = us_x
-    
-    us_y = np.zeros(N)
-    us_y[0:n_y_stop] = 0.0 * np.ones(n_y_stop)
-    us[:,1] = us_y
+    us[0:n_x_stop,0] = 0.11 * np.ones(n_x_stop)
+    us[0:n_y_stop,1] = 0.5 * np.ones(n_y_stop)
 
     # Simulate the system (x = state vector)
     xs = cas.DM.zeros((N, spacecraft.nx))
     xs[0,:] = spacecraft.x0_scaled
 
     for k in range(1,N):
-        xs[k,:] = ode_scl_d(xs[k-1,:],us[k-1,:])
+        xs[k,:] = F(xs[k-1,:],us[k-1,:])
 
     xs = xs.full()
 
@@ -219,23 +211,17 @@ if __name__ == '__main__':
     plt.figure(1)
 
     # Plot 
-    plt.subplot(321)
-    plt.plot(tAxis, xs[:,0])
-    plt.ylabel('x-position [km]')
-
-    plt.subplot(322)
-    plt.plot(tAxis, xs[:,1])
+    plt.subplot(311)
+    plt.plot(xs[:,0], xs[:,1])
+    plt.xlabel('x-position [km]')
     plt.ylabel('y-position [km]')
 
-    plt.subplot(323)
-    plt.plot(tAxis, xs[:,2])
-    plt.ylabel('x-velocity [km/s]')
-
-    plt.subplot(324)
-    plt.plot(tAxis, xs[:,3])
+    plt.subplot(312)
+    plt.plot(xs[:,2], xs[:,3])
+    plt.xlabel('x-velocity [km/s]')
     plt.ylabel('y-velocity [km/s]')
 
-    plt.subplot(325)
+    plt.subplot(313)
     plt.plot(tAxis, xs[:,4])
     plt.ylabel('Mass [kg]')
 
