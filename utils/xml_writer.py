@@ -6,7 +6,7 @@
 ##
 
 import xml.etree.cElementTree as etree
-
+import numpy as np
 
 ##
 # @brief Writes data to XML. Contains:
@@ -44,40 +44,85 @@ def write_to_xml(
 
     # Parameters
     params = etree.SubElement(root, "Parameters")
-    etree.SubElement(params, "Time_Horizon", name="T").text = str(T)
-    etree.SubElement(params, "Samples_Number", name="N").text = str(N)
+    etree.SubElement(params, "T").text = str(T)
+    etree.SubElement(params, "N").text = str(N)
 
     # Target orbit
     target_orbit = etree.SubElement(root, "Target_Orbit")
-    etree.SubElement(target_orbit, "Eccentricity", name="e_x").text = str(e[0])
-    etree.SubElement(target_orbit, "Eccentricity", name="e_y").text = str(e[1])
-    etree.SubElement(target_orbit, "Angular_Momentum", name="h").text = str(h)
+    etree.SubElement(target_orbit, "e_x").text = str(e[0])
+    etree.SubElement(target_orbit, "e_y").text = str(e[1])
+    etree.SubElement(target_orbit, "h").text = str(h)
     
-    # Initial state
-    x0 = etree.SubElement(root, "x0")
-    etree.SubElement(x0, "xPos", name="xPos").text = str(xPoses[0])
-    etree.SubElement(x0, "yPos", name="yPos").text = str(yPoses[0])
-    etree.SubElement(x0, "xVel", name="xVel").text = str(xVelos[0])
-    etree.SubElement(x0, "yVel", name="yVel").text = str(yVelos[0])
-
     # States
     xs = etree.SubElement(root, "xs")
-    for k in range(1,N+1):
-        etree.SubElement(xs, "x"+str(k), name="xPos").text = str(xPoses[k])
-        etree.SubElement(xs, "x"+str(k), name="yPos").text = str(yPoses[k])
-        etree.SubElement(xs, "x"+str(k), name="xVel").text = str(xVelos[k])
-        etree.SubElement(xs, "x"+str(k), name="yVel").text = str(yVelos[k])
-        etree.SubElement(xs, "x"+str(k), name="mass").text = str(masses[k])
+    for k in range(0,N+1):
+        etree.SubElement(xs, "state",
+            k=str(k),
+            xPos=str(xPoses[k]),
+            yPos=str(yPoses[k]),
+            xVel=str(xVelos[k]),
+            yVel=str(yVelos[k]),
+            mass=str(masses[k])
+        )
 
     # Controls
     us = etree.SubElement(root, "us")
     for k in range(N):
-        etree.SubElement(us, "u"+str(k), name="xFor").text = str(xForces[k])
-        etree.SubElement(us, "u"+str(k), name="yFor").text = str(yForces[k])
+        etree.SubElement(us, "control",
+            k=str(k),
+            xFor=str(xForces[k]),
+            yFor=str(yForces[k])
+        )
 
     # Create tree and write to file
     tree = etree.ElementTree(root)
     tree.write(filename)
+
+
+def read_from_xml(filename):
+
+    # Grab the root of the element tree
+    root = etree.parse(filename).getroot()
+    
+    # Get the parameters, x0, xs, us
+    parameters = root.find("Parameters")
+    target_orbit = root.find("Target_Orbit")
+    xs = root.find("xs")
+    us = root.find("us")
+
+    # Grab parameters
+    params = {
+        'T': float(parameters.find('T').text),
+        'N': int(parameters.find('N').text)
+    }
+
+    # Grab target orbit
+    target_orbit = {
+        'e_x' : float(target_orbit.find('e_x').text),
+        'e_y' : float(target_orbit.find('e_y').text),
+        'h' : float(target_orbit.find('h').text)
+    }
+
+    # Grab states
+    xs_out = np.zeros((params['N']+1, 5)) # MAGICNUMBER
+    for x in xs.findall('state'):
+        k = int(x.get('k'))
+        xPos = float(x.get('xPos'))
+        yPos = float(x.get('yPos'))
+        xVel = float(x.get('xVel'))
+        yVel = float(x.get('yVel'))
+        mass = float(x.get('mass'))
+        xs_out[k,:] = np.array([xPos, yPos, xVel, yVel, mass])
+
+    # Grab controls
+    us_out = np.zeros((params['N'], 2)) # MAGICNUMBER
+    for u in us.findall('control'):
+        k = int(u.get('k'))
+        xFor = float(u.get('xFor'))
+        yFor = float(u.get('yFor'))
+        us_out[k,:] = np.array([xFor, yFor])
+
+    return params, target_orbit, xs_out, us_out
 
 
 ##
@@ -85,6 +130,7 @@ def write_to_xml(
 ##
 if __name__ == '__main__':
     
+    # Write something to xml
     write_to_xml(
         filename = 'test.xml', 
         T = 2,
@@ -99,3 +145,10 @@ if __name__ == '__main__':
         xForces = [0.2],
         yForces = [0.1]
     )
+
+    # Read something from xml
+    params, x0, xs, us = read_from_xml('test.xml')
+
+    print(params)
+    print(xs)
+    print(us)
