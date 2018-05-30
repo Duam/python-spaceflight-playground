@@ -99,27 +99,29 @@ def state_pol2cart (x_pol):
 def traj_pol2cart (xs_pol, us_pol):
 
     # Get the trajectory length
-    N_x = xs_pol[:,0].size
-    N_u = us_pol[:,0].size
+    N_x = xs_pol[0,:].size
+    N_u = us_pol[0,:].size
 
     # Check if trajectories are compatible
     if (N_x != N_u):
-        print("Error in traj_pol2cart: Trajectories are not equally long. Check your input.")
+        print("Error in traj_pol2cart: N_x != N_u + 1. Check your input.")
+        print("N_x = " + str(N_x))
+        print("N_u = " + str(N_u))
         return -1
 
     # Convert all state vectors to cartesian coordinates
-    xs_cart = np.zeros([N_x, 4])
+    xs_cart = np.zeros((4,N_x))
     for k in range(N_x):
-        xs_cart = state_pol2cart(xs_pol[k,:])
+        xs_cart[:,k] = state_pol2cart(xs_pol[:,k])
 
     # Convert controls by using the corotating reference frame
     us_cart = us_pol
     for k in range(N_u):
-        theta = xs_pol[k,1]
+        theta = xs_pol[1,k]
         rotation = np.array(
             [[np.cos(theta), -np.sin(theta)],
              [np.sin(theta),  np.cos(theta)]])
-        us_cart[k,:] = np.dot(rotation, us_cart[k,:])
+        us_cart[:,k] = np.dot(rotation, us_cart[:,k])
 
     # return
     return xs_cart, us_cart
