@@ -103,7 +103,7 @@ def traj_pol2cart (xs_pol, us_pol):
     N_u = us_pol[0,:].size
 
     # Check if trajectories are compatible
-    if (N_x != N_u):
+    if (N_x != N_u+1):
         print("Error in traj_pol2cart: N_x != N_u + 1. Check your input.")
         print("N_x = " + str(N_x))
         print("N_u = " + str(N_u))
@@ -130,4 +130,4 @@ def traj_pol2cart (xs_pol, us_pol):
 # Execute this script to test the functions
 ##    
 if __name__ == '__main__':
-    print("NEEDS TESTING")
+    print("I NEEDS TESTING")

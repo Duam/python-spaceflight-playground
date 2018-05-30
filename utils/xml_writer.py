@@ -33,11 +33,12 @@ def write_to_xml(
         len(yPoses) != N+1 or
         len(xVelos) != N+1 or
         len(yVelos) != N+1 or
-        len(masses) != N+1 or
-        len(xForces) != N or
-        len(yForces) != N
-    ):
-        print("One or more sizes are incorrect!")
+        len(masses) != N+1):
+        print("One or more state trajectory lengths are incorrect!")
+
+    if (len(xForces) != N or
+        len(yForces) != N):
+        print("One or more control trajectory lenghts are incorrect!")
 
     # Add a root
     root = etree.Element("Trajectory_Data")
