@@ -158,6 +158,7 @@ if __name__ == '__main__':
     # Import plotting library and runge kutta 4 integrator    
     import matplotlib.pyplot as plt
     from integrators.rk4step import rk4step_ode
+    from models.kepler_orbit.kepler_orbit import kepler_orbit as orbit
     from utils.conversion import *
     from utils.xml_writer import * 
 
@@ -231,7 +232,7 @@ if __name__ == '__main__':
 
     # Reference altitude [km] & angular velocity [µrad]
     altitude_ref = 20
-    angVel_ref = 10**6 * np.sqrt(spacecraft.mu / (spacecraft.R + 10**3 * altitude_ref)**3)
+    angVel_ref = 1e3 * np.sqrt(spacecraft.mu / (spacecraft.R + 1e3 * altitude_ref)**3)
 
     print("Reference altitude: " + str(altitude_ref))
     print("Reference angular velocity: " + str(angVel_ref))
@@ -266,16 +267,22 @@ if __name__ == '__main__':
     # Convert trajectory to cartesian coordinates
     xs_cart, us_cart = traj_pol2cart(xs[0:4,:], us)
 
-    # Create an orbit instance TODO
-    #orb = orbit()
+    # Create an orbit instance
+    orb = orbit()
+    orb.fromPolarState(
+        rho = spacecraft.R + spacecraft.unscale[0] * altitude_ref,
+        theta = 0.0,
+        rhoDot = 0.0,
+        thetaDot = spacecraft.unscale[3] * angVel_ref
+    )
 
     # Write trajectory to xml file
     write_to_xml(
         filename = 'trajectory_cartesian.xml',
         T = T,
         N = N,
-        e = [0,0,0],
-        h = [0,0,2],
+        e = orb.e[0:2],
+        h = orb.h[2],
         xPoses = xs_cart[0,:],
         yPoses = xs_cart[1,:],
         xVelos = xs_cart[2,:],
