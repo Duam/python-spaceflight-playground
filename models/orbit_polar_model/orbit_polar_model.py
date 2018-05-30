@@ -266,6 +266,9 @@ if __name__ == '__main__':
     # Convert trajectory to cartesian coordinates
     xs_cart, us_cart = traj_pol2cart(xs[0:4,:], us)
 
+    # Create an orbit instance TODO
+    #orb = orbit()
+
     # Write trajectory to xml file
     write_to_xml(
         filename = 'trajectory_cartesian.xml',
