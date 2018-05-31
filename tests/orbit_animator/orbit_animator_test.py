@@ -17,13 +17,19 @@ from utils.orbit_animator import orbit_animator
 
 
 # Read the trajectory from the xml file
-params, target_orbit, xs_out, us_out = read_from_xml('trajectory_cartesian.xml')
+params, target_orbit, xs_out, us_out = read_from_xml('trajectory.xml')
 
 orb_tar = orbit()
 orb_tar.setOrbitalElements(
     e = np.array([target_orbit['e_x'], target_orbit['e_y'], 0]),
     h = np.array([0,0, target_orbit['h']])
 )
+
+print(xs_out[0,:])
+print(xs_out[1,:])
+
+#for k in range(params['N']):
+#    xs_out[0,k] = xs_out[0,k] + 1737.5e3 
 
 # Prepare parameter struct for the animator
 anim_params = {
