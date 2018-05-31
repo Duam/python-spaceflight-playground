@@ -68,12 +68,12 @@ class orbit_animator:
         margin = 2
         self.fig = plt.figure(figNum)
         self.ax = self.fig.add_subplot(
-            111, 
-            autoscale_on = False, 
-            xlim = (np.amin(self.xPositions)-margin, np.amax(self.xPositions)+margin),
-            ylim = (np.amin(self.yPositions)-margin, np.amax(self.yPositions)+margin)
+            111
+            #xlim = (np.amin(self.xPositions)-margin, np.amax(self.xPositions)+margin),
+            #ylim = (np.amin(self.yPositions)-margin, np.amax(self.yPositions)+margin)
         )
         self.ax.grid()
+        self.ax.set_aspect('equal', adjustable='box')
 
         ## == STATIC PLOT ELEMENTS ==
         # Target orbit
@@ -147,7 +147,7 @@ class orbit_animator:
             self.xVelocities[i],
             self.yVelocities[i]
         )
-        print(self.orbit_osculating.toString())
+        #print(self.orbit_osculating.toString())
         orbit_osculating_samples = self.orbit_osculating.discretize()
         self.orbit_osculating_plot.set_data(
             orbit_osculating_samples[:,0],
