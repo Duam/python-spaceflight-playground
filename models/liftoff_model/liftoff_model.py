@@ -22,9 +22,9 @@ class liftoff_model:
 
         # Spacecraft parameters
 
-        # Distance from base to COM (m)
+        # Distance from COM to base (m)
         self.L = 20.0
-        # Distance from base to COP (m)
+        # Distance from COM to COP (m)
         self.l = 10.0
         # Maximum thrust (N)
         self.maxThrust = 300.0 * 10**3
@@ -33,7 +33,7 @@ class liftoff_model:
         # Total mass (kg)
         self.m = 20.0 * 10**3
         # Inertia tensor (kg*m^2)
-        self.I = 1 * 10**3
+        self.I = 1 * 10**4
 
         # Dynamics parameters
 
@@ -77,46 +77,36 @@ class liftoff_model:
         angVel = x[5]
 
         # Get controls
-        T = u[0]
-        mu = u[1]
+        thrust_percentage = u[0]
+        thrust_angle = u[1]
 
         # Get disturbing wind force (only in horizontal direction)
-        F_W = u[2]
+        force_wind = u[2]
 
         # Compute some intermediate values
+        thrust_magnitude = thrust_percentage * self.maxThrust
         sa = cas.sin(ang)
         ca = cas.cos(ang)
-        sm = cas.sin(mu)
-        cm = cas.cos(mu)
+        st = cas.sin(thrust_angle)
+        ct = cas.cos(thrust_angle)
 
-        # Compute the thruster forces
-        '''F_T = T * cas.vertcat(
-            sm * sa + cm * ca, 
-            sm * ca - cm * sa
-        )'''
-        F_T = T * self.maxThrust * cas.vertcat( # <- Check this equation
-            cm * sa - sm * ca,
-            cm * ca + sm * sa
+        # == LINEAR FORCES ==
+        force_gravity = - self.m * self.g
+        force_thrust = thrust_magnitude * cas.vertcat(
+            ct * sa - st * ca,
+            ct * ca + st * sa
         )
-
-        print(F_T)
-
-        # Compute the gravitational force
-        F_G = cas.vertcat(
-            0,
-            - self.m * self.g
-        )
-
-        # Compute the torque around base
-        Torque = self.L * F_W * ca + self.l * F_G[1] * sa
-        # TODO check this equation! thruster gimbal has no effect
 
         # Compute the linear accelerations
-        xAcc = (F_T[0] + F_W) / self.m
-        yAcc = (F_T[1] + F_G[1]) / self.m
+        xAcc = (force_thrust[0] + force_wind) / self.m
+        yAcc = (force_thrust[1] + force_gravity) / self.m
 
+        # == TORQUES ==
+        torque_wind = self.l * ca * force_wind
+        torque_thrust = self.L * st * thrust_magnitude
+        
         # Compute the angular acceleration
-        angAcc = Torque / self.I
+        angAcc = (torque_thrust + torque_wind) / self.I
 
         # Stack the derivatives
         xdot = cas.vertcat(
@@ -184,7 +174,7 @@ if __name__ == '__main__':
     wind_forces = np.zeros((N, spacecraft.nd))
     controls = np.zeros((N, spacecraft.nu))
     controls[:,0] = 0.7 * np.ones(N)
-    controls[50:60,1] = 0.01 * np.ones(10)
+    controls[50:51,1] = 0.000001 * np.ones(1)
 
     us = np.append(controls, wind_forces, axis=1)
 
