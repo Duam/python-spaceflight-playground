@@ -105,7 +105,7 @@ def read_from_xml(filename):
     }
 
     # Grab states
-    xs_out = np.zeros((params['N']+1, 5)) # MAGICNUMBER
+    xs_out = np.zeros((5,params['N']+1)) # MAGICNUMBER
     for x in xs.findall('state'):
         k = int(x.get('k'))
         xPos = float(x.get('xPos'))
@@ -113,15 +113,15 @@ def read_from_xml(filename):
         xVel = float(x.get('xVel'))
         yVel = float(x.get('yVel'))
         mass = float(x.get('mass'))
-        xs_out[k,:] = np.array([xPos, yPos, xVel, yVel, mass])
+        xs_out[:,k] = np.array([xPos, yPos, xVel, yVel, mass])
 
     # Grab controls
-    us_out = np.zeros((params['N'], 2)) # MAGICNUMBER
+    us_out = np.zeros((2,params['N'])) # MAGICNUMBER
     for u in us.findall('control'):
         k = int(u.get('k'))
         xFor = float(u.get('xFor'))
         yFor = float(u.get('yFor'))
-        us_out[k,:] = np.array([xFor, yFor])
+        us_out[:,k] = np.array([xFor, yFor])
 
     return params, target_orbit, xs_out, us_out
 
