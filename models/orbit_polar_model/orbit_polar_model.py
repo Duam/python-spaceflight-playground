@@ -224,6 +224,12 @@ if __name__ == '__main__':
     for k in range(1,N+1):
         xs[:,k] = F(xs[:,k-1],us[:,k-1])
 
+
+    # Unscale trajectory
+    for k in range(N+1):
+        xs[:,k] = xs[:,k] * spacecraft.unscale
+
+
     xs = xs.full()
 
     # Prepare plotting
@@ -265,7 +271,18 @@ if __name__ == '__main__':
     plt.show()
 
     # Convert trajectory to cartesian coordinates
+    for k in range(N+1):
+        xs[0,k] = xs[0,k] + spacecraft.R
+    
+    # Unscale trajectory
+    #for k in range(N+1):
+    #    xs[:,k] = xs[:,k] * spacecraft.unscale
+
+
     xs_cart, us_cart = traj_pol2cart(xs[0:4,:], us)
+
+    print(xs_cart[0,:])
+    print(xs_cart[1,:])
 
     # Create an orbit instance
     orb = orbit()
@@ -278,7 +295,7 @@ if __name__ == '__main__':
 
     # Write trajectory to xml file
     write_to_xml(
-        filename = 'trajectory_cartesian.xml',
+        filename = 'trajectory.xml',
         T = T,
         N = N,
         e = orb.e[0:2],
