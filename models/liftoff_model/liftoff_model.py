@@ -13,27 +13,38 @@ class liftoff_model:
     ## 
     # @brief Initialization procedure
     ##
-    def __init__(self):
+    def __init__(self, params = None):
         
+        if (params == None):
+            self.params = {
+                'g': 9.81,
+                'L': 20.0,
+                'l': 10.0,
+                'maxThrust': 300e3,
+                'maxGimbal': np.pi / 8,
+                'm': 20e3,
+                'I': 1e4
+            }
+
         # Universe parameters
 
         # Gravitational constant (m/s^2)
-        self.g = 9.81
+        self.g = params['g']
 
         # Spacecraft parameters
 
         # Distance from COM to base (m)
-        self.L = 20.0
+        self.L = params['L']
         # Distance from COM to COP (m)
-        self.l = 10.0
+        self.l = params['l']
         # Maximum thrust (N)
-        self.maxThrust = 300.0 * 10**3
+        self.maxThrust = params['maxThrust']
         # Maximum gimbal angle in both directions (rad)
-        self.maxGimbal = np.pi / 8
+        self.maxGimbal = params['maxGimbal']
         # Total mass (kg)
-        self.m = 20.0 * 10**3
+        self.m = params['m']
         # Inertia tensor (kg*m^2)
-        self.I = 1 * 10**4
+        self.I = params['I']
 
         # Dynamics parameters
 
@@ -50,6 +61,23 @@ class liftoff_model:
             0.0, # angle (measured from vertical axis)
             0.0  # angular velocity
         )
+
+        # Names of states, controls disturbances
+        self.x_keys = [
+            'xPos',
+            'yPos',
+            'xVel', 
+            'yVel',
+            'ang',
+            'angVel'
+        ]
+        self.u_keys = [
+            'thrust',
+            'gimbal'
+        ]
+        self.d_keys = [
+            'xForce'
+        ]
 
     
     ##
