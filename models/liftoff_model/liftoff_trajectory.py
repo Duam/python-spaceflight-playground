@@ -123,7 +123,7 @@ class liftoff_trajectory:
     def toXML(self, filename):
         
         # Create root and main branches
-        root = etree.Element("Liftoff trajectory")
+        root = etree.Element("Liftoff_trajectory")
         params = etree.SubElement(root, 'Parameters')
         xs = etree.SubElement(root, 'xs')
         us = etree.SubElement(root, 'us')
@@ -147,7 +147,7 @@ class liftoff_trajectory:
             for i in range(self.rocket.nu):
                 u[self.rocket.u_keys[i]] = str(self.us[i,k])
             
-            etree.SubElement(xs, 'u', k = str(k), **u)
+            etree.SubElement(us, 'u', k = str(k), **u)
         
         # Fill in disturbances
         for k in range(self.N):
@@ -155,7 +155,7 @@ class liftoff_trajectory:
             for i in range(self.rocket.nd):
                 d[self.rocket.d_keys[i]] = str(self.ds[i,k])
 
-            etree.SubElement(xs, 'd', k = str(k), **d)
+            etree.SubElement(ds, 'd', k = str(k), **d)
         
         # Create tree and write to file
         tree = etree.ElementTree(root)
@@ -175,7 +175,7 @@ class liftoff_trajectory:
         xs = root.find('xs')
         us = root.find('us')
         ds = root.find('ds')
-
+        
         # Grab parameters
         for key, value in params.items():
             self.params[key] = float(value)
@@ -183,18 +183,41 @@ class liftoff_trajectory:
             # Special case: N is an integer
             if (key == 'N'):
                 self.params[key] = int(value)
+        
+        # Check if the supplied trajectories have the correct length
+        all_x = xs.findall('x')
+        if (len(all_x) != self.N+1):
+            print("liftoff_trajectory.fromXML(): x trajectory lengths do not match.")
+            print("-- In xml: " + str(len(all_x)) + ", should be " + str(self.N+1))
+            return
+
+        all_u = us.findall('u')
+        if (len(all_u) != self.N):
+            print("liftoff_trajectory.fromXML(): u trajectory lengths do not match.")
+            print("-- In xml: " + str(len(all_u)) + ", should be " + str(self.N))
+            return
+
+        all_d = ds.findall('d')
+        if (len(all_d) != self.N):
+            print("liftoff_trajectory.fromXML(): d trajectory lengths do not match.")
+            print("-- In xml: " + str(len(all_d)) + ", should be " + str(self.N))
+            return
 
         # Grab states
-        for k in range(N+1):
+        print(type(all_x))
+        for x in all_x:
+            k = int(x.get('k'))
             for i in range(self.rocket.nx):
-                xs[i,k] = float(xs.find(self.rocket.x_keys[i]))
+                self.xs[i,k] = float(x.get(self.rocket.x_keys[i]))
 
         # Grab controls
-        for k in range(N):
+        for u in all_u:
+            k = int(u.get('k'))
             for i in range(self.rocket.nu):
-                us[i,k] = float(us.find(self.rocket.u_keys[i]))
+                self.us[i,k] = float(u.get(self.rocket.u_keys[i]))
 
         # Grab disturbances
-        for k in range(N):
+        for d in all_d:
+            k = int(d.get('k'))
             for i in range(self.rocket.nd):
-                ds[i,k] = float(ds.find(self.rocket.d_keys[i]))
+                self.ds[i,k] = float(d.get(self.rocket.d_keys[i]))
