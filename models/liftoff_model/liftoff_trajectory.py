@@ -13,7 +13,7 @@ import xml.etree.cElementTree as etree
 import numpy as np
 import casadi as cas
 
-import models.liftoff_model.liftoff_model
+from models.liftoff_model.liftoff_model import liftoff_model
 
 
 ##
@@ -34,7 +34,7 @@ class liftoff_trajectory:
         if (rocket == None):
             rocket = liftoff_model()
 
-        self.rocket = rocket
+        self.rocket = rocket # should copy parameters directly
 
         # Horizon length and sample number
         self.T = T
