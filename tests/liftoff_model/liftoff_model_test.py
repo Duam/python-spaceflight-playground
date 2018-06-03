@@ -108,9 +108,17 @@ plt.ylabel('angular vel. [rad/s]')
 plt.show()
 
 
+# Test xml writer
 trajectory = liftoff_trajectory(T, N, spacecraft)
 trajectory.setXs(xs)
 trajectory.setUs(controls)
 trajectory.setDs(wind_forces)
-
 trajectory.toXML('trajectory.xml')
+
+# Test xml reader
+load_trajectory = liftoff_trajectory(T, N, spacecraft)
+load_trajectory.fromXML('trajectory.xml')
+
+print(load_trajectory.rocket.params)
+#print(load_trajectory.xs)
+#print(load_trajectory.us)
