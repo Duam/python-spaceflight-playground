@@ -51,8 +51,9 @@ class rocket_animator:
         self.fig = plt.figure(figNum)
         self.ax = self.fig.add_subplot(111)
         self.ax.grid()
+        self.ax.set_aspect('equal')
         plt.axis(
-            [-20, 20, -40, 40]
+            [-40, 40, -40, 40]
         )
         
         # == STATIC PLOT ELEMENETS ==
@@ -89,7 +90,8 @@ class rocket_animator:
             [self.nozzle_start_width/2.0, -self.params['L']+2] # Top right nozzle corner
         ]
         self.nozzle = patches.Polygon(
-            xy = nozzle_points
+            xy = nozzle_points,
+            facecolor = 'red'
         )
         self.ax.add_patch(self.nozzle)
 
@@ -114,24 +116,32 @@ class rocket_animator:
     def animation_main(self,i):
         # Get the transformation of the origin relative to the axis
         ts = self.ax.transData
-        coords = ts.transform([0,0])
+        coords_com = ts.transform([0,0])
 
         # Compute the transformation corresponding to a rotation
         # around the origin
-        tr = mpl.transforms.Affine2D().rotate_around(
-            x = coords[0], 
-            y = coords[1], 
+        t_rot_com = mpl.transforms.Affine2D().rotate_around(
+            x = coords_com[0], 
+            y = coords_com[1], 
             theta = self.xs[4,i]
         )
 
-        # Add the transformations
-        t = ts + tr
-        
+        # Compute transformation for rotating around base
+        coords_base = ts.transform([
+            self.params['L'] * np.sin(self.xs[4,i]),
+            -self.params['L'] * np.cos(-self.xs[4,i])
+        ])
+        t_rot_base = mpl.transforms.Affine2D().rotate_around(
+            x = coords_base[0],
+            y = coords_base[1],
+            theta = self.us[1,i]
+        )
+
         # Apply the transformations (rotations) to the plot elements
-        self.nose.set_transform(t)
-        self.body.set_transform(t)
-        self.nozzle.set_transform(t) # TODO: thrust gimballing
-        self.gimbal_ref.set_transform(t)
+        self.nose.set_transform(ts + t_rot_com)
+        self.body.set_transform(ts + t_rot_com)
+        self.nozzle.set_transform(ts + t_rot_com + t_rot_base) 
+        self.gimbal_ref.set_transform(ts + t_rot_com)
 
         return self.body, self.gimbal_ref, self.nose, self.nozzle
 
