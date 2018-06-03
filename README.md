@@ -2,6 +2,6 @@
 python3 with: casadi, numpy, matplotlib
 
 # ToDo
-* Spacecraft animator
-* Passing around orbits and trajectories feels VERY uneasy and complicated. Maybe implement a trajectory class? Also extend xml interface that e.g. takes a kepler_orbit() instance as input and also outputs a kepler_orbit() instead of the orbital elements. Make xml writer its own class?
-* Outsource unit tests to their own test folders? <- only the ones that need external data
+1. Liftoff animator
+2. Implement orbit trajectory class, change orbit_polar_model accordingly
+3. Solve an OCP for liftoff
