@@ -10,8 +10,9 @@ sys.path.append(os.path.realpath('../'))
 sys.path.append(os.getcwd())
 
 import xml.etree.cElementTree as etree
-
 import numpy as np
+import casadi as cas
+
 import models.liftoff_model.liftoff_model
 
 
@@ -28,16 +29,21 @@ class liftoff_trajectory:
     # @param N Number of samples
     # @param rocket liftoff_model instance (needed for parameters)
     ##
-    def __init__(self, T, N, rocket = liftoff_model()):
+    def __init__(self, T, N, rocket = None):
+
+        if (rocket == None):
+            rocket = liftoff_model()
+
+        self.rocket = rocket
 
         # Horizon length and sample number
         self.T = T
         self.N = N
 
         # Containers for states, controls, disturbances
-        self.xs = np.zeros((rocket.nx, self.N+1))
-        self.us = np.zeros((rocket.nu, self.N))
-        self.ds = np.zeros((rocket.nd, self.N))
+        self.xs = cas.DM.zeros((rocket.nx, self.N+1))
+        self.us = cas.DM.zeros((rocket.nu, self.N))
+        self.ds = cas.DM.zeros((rocket.nd, self.N))
 
         # Set the initial state
         self.xs[:,0] = rocket.x0
@@ -49,8 +55,8 @@ class liftoff_trajectory:
     ##
     def setXs (self, xs):
 
-        if(xs.shape != self.xs.shape)
-            print("State trajectory shapes do not match.")
+        if(xs.shape != self.xs.shape):
+            print("State trajectory shapes do not match. xs.shape = " + str(xs.shape) + ", self.xs.shape = " + str(self.xs.shape))
             return
         
         self.xs = xs
@@ -63,8 +69,8 @@ class liftoff_trajectory:
     ##
     def setUs (self, us):
 
-        if(us.shape != self.us.shape)
-            print("Control trajectory shapes do not match.")
+        if(us.shape != self.us.shape):
+            print("Control trajectory shapes do not match. us.shape = " + str(us.shape) + ", self.us.shape = " + str(self.us.shape))
             return
         
         self.us = us
@@ -77,8 +83,8 @@ class liftoff_trajectory:
     ##
     def setDs (self, ds):
 
-        if(ds.shape != self.ds.shape)
-            print("Disturbance trajectory shapes do not match.")
+        if(ds.shape != self.ds.shape):
+            print("Disturbance trajectory shapes do not match. ds.shape = " + str(ds.shape) + ", self.ds.shape = " + str(self.ds.shape))
             return
         
         self.ds = ds
@@ -93,15 +99,15 @@ class liftoff_trajectory:
     ##
     def add (self, x, u, d, k):
 
-        if(x.shape != self.xs[:,0].shape)
+        if(x.shape != self.xs[:,0].shape):
             print("State shapes do not match")
             return
 
-        if(u.shape != self.us[:,0].shape)
+        if(u.shape != self.us[:,0].shape):
             print("Control shapes do not match")
             return
 
-        if(d.shape != self.ds[:,0].shape)
+        if(d.shape != self.ds[:,0].shape):
             print("Disturbance shapes do not match")
             return
 
@@ -114,41 +120,81 @@ class liftoff_trajectory:
     # @brief Writes the trajectory to XML
     # @param filename The name of the xml file
     ##
-    def writeXML(self, filename):
+    def toXML(self, filename):
         
         # Create root and main branches
         root = etree.Element("Liftoff trajectory")
-        params = etree.Element(root, 'Parameters')
+        params = etree.SubElement(root, 'Parameters')
         xs = etree.SubElement(root, 'xs')
         us = etree.SubElement(root, 'us')
         ds = etree.SubElement(root, 'ds')
 
         # Fill in parameters
-        for key, value in self.params.items():
+        for key, value in self.rocket.params.items():
             etree.SubElement(params, key).text = str(value)
 
         # Fill in states
-        for k in range(N+1):
-            etree.SubElement(xs, 'x_'+str(k))
+        for k in range(self.N+1):
+            x = {}
             for i in range(self.rocket.nx):
-                etree.SubElement('x_'+str(k), self.rocket.x_keys[i]).text = str(x[k])
+                x[self.rocket.x_keys[i]] = str(self.xs[i,k])
 
+            etree.SubElement(xs, 'x', k = str(k), **x)
+        
         # Fill in controls
-        for k in range(N):
-            etree.SubElement(us, 'u_'+str(k))
+        for k in range(self.N):
+            u = {}
             for i in range(self.rocket.nu):
-                etree.SubElement('u_'+str(k), self.rocket.u_keys[i]).text = str(u[k])
-
+                u[self.rocket.u_keys[i]] = str(self.us[i,k])
+            
+            etree.SubElement(xs, 'u', k = str(k), **u)
+        
         # Fill in disturbances
-        for k in range(N):
-            etree.SubElement(xs, 'd_'+str(k))
+        for k in range(self.N):
+            d = {}
             for i in range(self.rocket.nd):
-                etree.SubElement('d_'+str(k), self.rocket.d_keys[i]).text = str(d[k])
+                d[self.rocket.d_keys[i]] = str(self.ds[i,k])
 
+            etree.SubElement(xs, 'd', k = str(k), **d)
+        
         # Create tree and write to file
         tree = etree.ElementTree(root)
         tree.write(filename)
 
 
     # TODO: read from XML
-    
+    ##
+    # @brief Reads the trajectory from an XML file
+    # @param filename The name of the xml file
+    ##
+    def fromXML(self, filename):
+
+        # Grab the root and main branches of the element tree
+        root = etree.parse(filename).getroot()
+        params = root.find('Parameters')
+        xs = root.find('xs')
+        us = root.find('us')
+        ds = root.find('ds')
+
+        # Grab parameters
+        for key, value in params.items():
+            self.params[key] = float(value)
+
+            # Special case: N is an integer
+            if (key == 'N'):
+                self.params[key] = int(value)
+
+        # Grab states
+        for k in range(N+1):
+            for i in range(self.rocket.nx):
+                xs[i,k] = float(xs.find(self.rocket.x_keys[i]))
+
+        # Grab controls
+        for k in range(N):
+            for i in range(self.rocket.nu):
+                us[i,k] = float(us.find(self.rocket.u_keys[i]))
+
+        # Grab disturbances
+        for k in range(N):
+            for i in range(self.rocket.nd):
+                ds[i,k] = float(ds.find(self.rocket.d_keys[i]))
