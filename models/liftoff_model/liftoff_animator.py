@@ -128,6 +128,8 @@ class liftoff_animator:
         )
         self.ax.add_patch(self.gimbal_ang)
 
+        # TODO: Rocket thrust
+
     ## 
     # @brief Updates all the dynamic objects in the plot. Is used by
     #        matplotlib.animation
