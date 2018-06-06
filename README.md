@@ -6,6 +6,11 @@ python3 with: casadi, numpy, matplotlib
 2. Implement orbit trajectory class, change orbit_polar_model accordingly
 3. Solve an OCP for liftoff
 
+## Notes
+* Let angle reference line stick to spacecraft
+* Spacecraft moves through space, camera follows it
+* Only telemetry box is fixed to axes
+
 # Folder structure
 * integrators
 * ocps: Optimal control problems
