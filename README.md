@@ -7,8 +7,8 @@ python3 with: casadi, numpy, matplotlib
 3. Solve an OCP for liftoff
 
 # Folder structure
-|-- integrators\\
-|-- ocps: Optimal control problems\\
+|-- integrators\n
+|-- ocps: Optimal control problems
 |-- legacy: Old matlab code
 |-- models
 |   |-- AR1_model: Autoregression model for wind simulation
