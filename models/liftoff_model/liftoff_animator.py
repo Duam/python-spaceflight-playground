@@ -40,84 +40,114 @@ class liftoff_animator:
         self.ds = trajectory.ds
 
         # Some rocket geometry parameters
-        self.body_width = 5
-        self.body_height = 35.0
-        self.nose_height = 5.0
-        self.nozzle_height = 5
-        self.nozzle_start_width = 1.5
-        self.nozzle_end_width = 3
+        body_width = 5
+        body_height = 35.0
+        nose_height = 5.0
+        nozzle_height = 5
+        nozzle_start_width = 1.5
+        nozzle_end_width = 3
+
+        # Some reference points at zero angle
+        self.com = [0,0]
+        self.nozzle_joint = [0,-self.params['L']]
+        self.zero_gimbal_ref_bottom = [0,-body_height]
+        self.real_gimbal_ref_bottom = [0,-body_height+2]
+
+        # Rocket vertices at zero angle
+        self.nose_tip = [0, body_height - self.params['L'] + nose_height]
+        self.body_topleft = [-body_width/2.0, body_height-self.params['L']]
+        self.body_topright = [body_width/2.0, body_height-self.params['L']]
+        self.body_bottomleft = [-body_width/2.0, -self.params['L']]
+        self.body_bottomright = [body_width/2.0, -self.params['L']]
+        self.nozzle_topleft = [-nozzle_start_width/2.0, -self.params['L']+2]
+        self.nozzle_topright = [nozzle_start_width/2.0, -self.params['L']+2]
+        self.nozzle_bottomleft = [-nozzle_end_width/2.0, -self.params['L']-nozzle_height]
+        self.nozzle_bottomright = [nozzle_end_width/2.0, -self.params['L']-nozzle_height]
+
+        # Some plot parameters
+        self.margin = 40 
+        self.rocket_color = 'b'
+        self.ref_line_color = 'b'
+        self.act_line_color = 'b'
 
         # Configure figure
         self.fig = plt.figure(figNum)
         self.ax = self.fig.add_subplot(111)
         self.ax.grid()
         self.ax.set_aspect('equal')
-        plt.axis(
-            [-40, 40, -40, 40]
-        )
+        plt.axis([
+            float(self.xs[0,0])-self.margin, # xmin
+            float(self.xs[0,0])+self.margin, # xmax
+            float(self.xs[1,0])-self.margin, # ymin
+            float(self.xs[1,0])+self.margin  # ymax
+        ])
         
         # == STATIC PLOT ELEMENETS ==
-        # Box in upper left corner for showing velocity
+        # Telemetry data box in upper right corner
+        self.telemetry_box = patches.Rectangle(
+            xy = (0.7,0.8),
+            width = 0.3,
+            height = 0.2,
+            fill = True,
+            transform = self.ax.transAxes,
+            color = 'darkblue'
+        )
 
+        # Telemetry data labels
+        self.ax.text(s = 'Speed: ', x = 0.72, y = 0.93, color = 'red', transform = self.ax.transAxes)
+        self.ax.text(s = 'Altitude: ', x = 0.72, y = 0.85, color = 'red', transform = self.ax.transAxes)
+        
         # Dashed vertical reference line
+        self.angle_ref = patches.Polygon(
+            xy = [[0.5, 0.1], [0.5, 0.9]], 
+            linestyle = 'dashdot', 
+            transform = self.ax.transAxes, 
+            closed = None, 
+            fill = None
+        )
+
+        # Add those elements to the plot
+        self.ax.add_patch(self.telemetry_box)
+        self.ax.add_patch(self.angle_ref)
 
         # == DYNAMIC PLOT ELEMENTS ==
-        # Box for rocket body
-        self.body = patches.Rectangle(
-            xy = (-self.body_width/2.0, -self.params['L']),
-            width = self.body_width,
-            height = self.body_height,
+        # Polygon for rocket body and nose
+        self.body = patches.Polygon(
+            xy = [self.body_bottomleft, 
+                  self.body_topleft, 
+                  self.nose_tip,
+                  self.body_topright, 
+                  self.body_bottomright],
             fill = True,
         )
-        self.ax.add_patch(self.body)
-    
-        # Polygon for rocket nose
-        nose_points = [
-            [-self.body_width/2.0, self.body_height-self.params['L']], # Upper left body corner
-            [0, self.body_height - self.params['L'] + self.nose_height], # Nose tip
-            [self.body_width/2.0, self.body_height-self.params['L']] # Upper right body corner
-        ]
-        self.nose = patches.Polygon(
-            xy = nose_points
-        )
-        self.ax.add_patch(self.nose)
-
+        
         # Polygon for rocket nozzle
-        nozzle_points = [
-            [-self.nozzle_start_width/2.0, -self.params['L']+2], # Top left nozzle corner
-            [-self.nozzle_end_width/2.0, -self.params['L']-self.nozzle_height], # Bottom left nozzle corner
-            [self.nozzle_end_width/2.0, -self.params['L']-self.nozzle_height], # Bottom right nozzle corner
-            [self.nozzle_start_width/2.0, -self.params['L']+2] # Top right nozzle corner
-        ]
         self.nozzle = patches.Polygon(
-            xy = nozzle_points,
+            xy = [self.nozzle_topleft, self.nozzle_topright, self.nozzle_bottomright, self.nozzle_bottomleft],
             facecolor = 'red'
         )
-        self.ax.add_patch(self.nozzle)
-
+        
         # Dashed reference line for zero-gimbal
         self.gimbal_ref = patches.Polygon(
-            xy = [[0,0],[0,-self.body_height]],
+            xy = [self.com, self.zero_gimbal_ref_bottom],
             linestyle = 'dashdot',
             closed = None,
             fill = None,
             edgecolor = 'g'
         )
-        self.ax.add_patch(self.gimbal_ref)
         
         # Full line for actual gimbal angle
         self.gimbal_dir = patches.Polygon(
-            xy = [[0,-self.params['L']], [0,-self.body_height+2]],
+            xy = [self.nozzle_joint, self.real_gimbal_ref_bottom],
             linestyle = 'solid',
             closed = None,
             fill = None,
             edgecolor = 'b'
         )
-        self.ax.add_patch(self.gimbal_dir)
 
         # Arc for gimbal angle
         self.gimbal_ang = patches.Arc(
-            xy = [0,-self.params['L']],
+            xy = self.nozzle_joint,
             width = 15,
             height = 15,
             angle = 270,
@@ -126,9 +156,38 @@ class liftoff_animator:
             edgecolor = 'b',
             linewidth = '2',
         )
-        self.ax.add_patch(self.gimbal_ang)
+        
+        # Full line for actual gimbal angle
+        self.gimbal_dir = patches.Polygon(
+            xy = [self.nozzle_joint, self.real_gimbal_ref_bottom],
+            linestyle = 'solid',
+            closed = None,
+            fill = None,
+            edgecolor = 'b'
+        )
+
+        # Arc for total angle
+        self.rocket_ang = patches.Arc(
+            xy = self.com,
+            width = 15,
+            height = 15,
+            angle = 90,
+            theta1 = 0,
+            theta2 = 180/np.pi * float(self.xs[1,0]),
+            edgecolor = 'b',
+            linewidth = '2'
+        )
+        
 
         # TODO: Rocket thrust
+
+        # Add all patches to the plot
+        self.ax.add_patch(self.body)
+        self.ax.add_patch(self.nozzle)
+        self.ax.add_patch(self.gimbal_ref)
+        self.ax.add_patch(self.gimbal_dir)
+        self.ax.add_patch(self.gimbal_ang)
+        self.ax.add_patch(self.rocket_ang)
 
     ## 
     # @brief Updates all the dynamic objects in the plot. Is used by
@@ -138,7 +197,7 @@ class liftoff_animator:
     def animation_main(self,i):
         # Get the transformation of the origin relative to the axis
         ts = self.ax.transData
-        coords_com = ts.transform([0,0])
+        coords_com = ts.transform(self.com)
 
         # Compute the transformation corresponding to a rotation
         # around the origin
@@ -159,11 +218,11 @@ class liftoff_animator:
             theta = self.us[1,i]
         )
 
-        # Set gimbal angle
-        self.gimbal_ang.theta2 = 180/np.pi * float(self.us[1,i])
+        # Set rocket and gimbal angle
+        self.gimbal_ang.theta2 = 180.0/np.pi * float(self.us[1,i])
+        self.rocket_ang.theta2 = 180.0/np.pi * float(self.xs[4,i])
 
         # Apply the transformations (rotations) to the plot elements
-        self.nose.set_transform(ts + t_rot_com)
         self.body.set_transform(ts + t_rot_com)
         self.nozzle.set_transform(ts + t_rot_com + t_rot_base) 
         self.gimbal_ref.set_transform(ts + t_rot_com)
