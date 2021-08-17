@@ -13,7 +13,7 @@ sys.path.append(os.getcwd())
 
 import casadi as cas
 import numpy as np
-from src.spaceflight_playground.models.orbit_polar_model import orbit_polar_model
+from src.spaceflight_playground.models.polar_orbiter import orbit_polar_model
 from src.spaceflight_playground.rk4step import rk4step_L, rk4step_ode
 
 # Create a spacecraft instance
@@ -21,21 +21,21 @@ spacecraft = orbit_polar_model()
 
 # Print parameters
 print("== Universe parameters ==")
-print("Grav. const. G: " + str(spacecraft.G) + " m^3/(kg*s^2)")
-print("Moon mass M: " + str(spacecraft.M) + " kg")
-print("Moon radius R: " + str(spacecraft.R) + " m")
+print("Grav. const. G: " + str(spacecraft.gravitational_constant) + " m^3/(kg*s^2)")
+print("Moon mass M: " + str(spacecraft.moon_mass) + " kg")
+print("Moon radius R: " + str(spacecraft.moon_radius) + " m")
 
 print("== Spacecraft parameters ==")
-print("Initial mass: " + str(spacecraft.m0) + " kg")
-print("Empty mass: " + str(spacecraft.me) + " kg")
-print("Max. thrust: " + str(spacecraft.u_max) + " N")
+print("Initial mass: " + str(spacecraft.full_mass) + " kg")
+print("Empty mass: " + str(spacecraft.empty_mass) + " kg")
+print("Max. thrust: " + str(spacecraft.max_thrust) + " N")
 print("Fuel consumption coeff:" + str(spacecraft.km) + " kg/s")
 print("Initial state: " + str(spacecraft.x0))
 print("Initial state (scaled): " + str(spacecraft.x0_scaled))
 print("State scale vector: " + str(spacecraft.scale))
 print("State unscale vector: " + str(spacecraft.unscale))
-print("Number of states: " + str(spacecraft.nx))
-print("Number of controls: " + str(spacecraft.nu))
+print("Number of states: " + str(spacecraft.num_states))
+print("Number of controls: " + str(spacecraft.num_forces))
 
 # Simulation parameters
 T = 600.0
@@ -48,7 +48,7 @@ h = DT/nn
 
 # Values for terminal constraints
 altitude_T = 20 # [km]
-angVel_T = 10**3 * np.sqrt(spacecraft.mu / (spacecraft.R + 10**3 * altitude_T)**3)
+angVel_T = 10**3 * np.sqrt(spacecraft.mu / (spacecraft.moon_radius + 10 ** 3 * altitude_T) ** 3)
 
 # Print out values
 print("== Terminal values ==")
@@ -56,9 +56,9 @@ print("Altitude: " + str(altitude_T) + " km")
 print("Angular velocity: " + str(angVel_T) + " microrad")
 
 # Create system model in casadi
-x = cas.MX.sym('x', spacecraft.nx, 1)
-u = cas.MX.sym('u', spacecraft.nu, 1)
-f = cas.Function('f', [x,u], [spacecraft.dynamics_scaled(x,u)], ['x','u'], ['xdot'])
+x = cas.MX.sym('x', spacecraft.num_states, 1)
+u = cas.MX.sym('u', spacecraft.num_forces, 1)
+f = cas.Function('f', [x,u], [spacecraft.ode_scaled(x, u)], ['x', 'u'], ['xdot'])
 
 # Create an integrator for the ode
 Xk = x
@@ -77,7 +77,7 @@ for k in range(nn):
 L = cas.Function('L', [x,u], [Lk], ['x','u'], ['L'])
 
 # Create an initial guess for the OCP by forward simulation
-us_init = np.zeros((N,spacecraft.nu))
+us_init = np.zeros((N,spacecraft.num_forces))
 n_r_stop = 60
 n_theta_stop = 85
 
@@ -89,7 +89,7 @@ us_theta = np.zeros(N)
 us_theta[0:n_theta_stop] = 0.2 * np.ones(n_theta_stop)
 us_init[:,1] = us_theta
 
-xs = cas.DM.zeros((N+1, spacecraft.nx))
+xs = cas.DM.zeros((N+1, spacecraft.num_states))
 xs[0,:] = spacecraft.x0_scaled
 for k in range(N):
     xs[k+1,:] = F(xs[k,:],us_init[k,:])
@@ -104,8 +104,8 @@ print(xs_init)
 print("Initial guess computed. Now starting creation of OCP.")
 
 # Create the optimization variables
-X = cas.MX.sym('X', spacecraft.nx, N)
-U = cas.MX.sym('U', spacecraft.nu, N)
+X = cas.MX.sym('X', spacecraft.num_states, N)
+U = cas.MX.sym('U', spacecraft.num_forces, N)
 
 # Start with empty NLP
 w = []      # Optimization variables (xs, us)
@@ -122,7 +122,7 @@ Xk = xs_init[0,:]
 for k in range(N):
     
     # NLP variable for control
-    Uk = cas.MX.sym('U_' + str(k), spacecraft.nu, 1)
+    Uk = cas.MX.sym('U_' + str(k), spacecraft.num_forces, 1)
     w = cas.vertcat(w, Uk)
     lbw = cas.vertcat(lbw, -cas.inf, -cas.inf)
     ubw = cas.vertcat(ubw,  cas.inf,  cas.inf)
@@ -138,21 +138,21 @@ for k in range(N):
     J = J + L(Xk, Uk)
 
     # New NLP variable for state
-    Xk = cas.MX.sym('X_' + str(k+1), spacecraft.nx, 1)
+    Xk = cas.MX.sym('X_' + str(k+1), spacecraft.num_states, 1)
     w = cas.vertcat(w, Xk)
     lbw_k = cas.vertcat(
         0.0,
         -cas.inf,
         -cas.inf,
         -cas.inf,
-        spacecraft.me * spacecraft.scale[4]
+        spacecraft.empty_mass * spacecraft.scale[4]
     )
     ubw_k = cas.vertcat(
         cas.inf,
         cas.inf,
         cas.inf,
         cas.inf,
-        spacecraft.m0 * spacecraft.scale[4]
+        spacecraft.full_mass * spacecraft.scale[4]
     )
     lbw = cas.vertcat(lbw, lbw_k)
     ubw = cas.vertcat(ubw, ubw_k)
@@ -160,8 +160,8 @@ for k in range(N):
 
     # Equality constraints to match intervals
     g = cas.vertcat(g, Xk_end - Xk)
-    lbg = cas.vertcat(lbg, cas.DM.zeros(spacecraft.nx, 1))
-    ubg = cas.vertcat(ubg, cas.DM.zeros(spacecraft.nx, 1))
+    lbg = cas.vertcat(lbg, cas.DM.zeros(spacecraft.num_states, 1))
+    ubg = cas.vertcat(ubg, cas.DM.zeros(spacecraft.num_states, 1))
 
 
 # Terminal constraint on altitude
@@ -216,10 +216,10 @@ print("== OCP solved ==")
 sol = solver_out['x']
 print("sol size: " + str(sol.shape) + ", type: " + str(type(sol)))
 
-u_opt = cas.DM.zeros((N,spacecraft.nu))
-x_opt = cas.DM.zeros((N,spacecraft.nx))
+u_opt = cas.DM.zeros((N,spacecraft.num_forces))
+x_opt = cas.DM.zeros((N,spacecraft.num_states))
 
-nxnu = spacecraft.nx + spacecraft.nu
+nxnu = spacecraft.num_states + spacecraft.num_forces
 
 u_opt[:,0] = sol[0::nxnu]
 u_opt[:,1] = sol[1::nxnu]
