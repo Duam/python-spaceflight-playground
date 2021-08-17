@@ -8,7 +8,7 @@
 
 
 import sys, os
-sys.path.append(os.path.realpath('../../'))
+sys.path.append(os.path.realpath('../../../../'))
 sys.path.append(os.getcwd())
 
 import matplotlib as mpl
@@ -17,9 +17,8 @@ import matplotlib.patches as patches
 import matplotlib.animation as animation
 import numpy as np
 
-from models.liftoff_model.liftoff_trajectory import liftoff_trajectory
 
-## 
+##
 # @class liftoff_animator
 # @brief The animator class
 ##

@@ -9,13 +9,10 @@ import sys, os
 sys.path.append(os.path.realpath('../../'))
 sys.path.append(os.getcwd())
 
-from models.liftoff_model.liftoff_model import liftoff_model
-from models.liftoff_model.liftoff_trajectory import liftoff_trajectory
-from models.liftoff_model.liftoff_animator import liftoff_animator
+from src.spaceflight_playground.models.liftoff_model.liftoff_model import liftoff_model
+from src.spaceflight_playground.models.liftoff_model.liftoff_trajectory import liftoff_trajectory
+from src.spaceflight_playground.models.liftoff_model.liftoff_animator import liftoff_animator
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import matplotlib.animation as animation
 import numpy as np
 
 

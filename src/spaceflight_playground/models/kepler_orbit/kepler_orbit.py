@@ -8,10 +8,10 @@
 import numpy as np
 
 import sys, os
-sys.path.append(os.path.realpath('../../'))
+sys.path.append(os.path.realpath('../../../../'))
 sys.path.append(os.getcwd())
 
-from utils.conversion import pol2cart, state_pol2cart
+from src.spaceflight_playground.utils.conversion import pol2cart, state_pol2cart
 
 ##
 # @class kepler_orbit

@@ -10,10 +10,9 @@ sys.path.append(os.path.realpath('../'))
 sys.path.append(os.getcwd())
 
 import xml.etree.cElementTree as etree
-import numpy as np
 import casadi as cas
 
-from models.liftoff_model.liftoff_model import liftoff_model
+from src.spaceflight_playground.models.liftoff_model.liftoff_model import liftoff_model
 
 
 ##

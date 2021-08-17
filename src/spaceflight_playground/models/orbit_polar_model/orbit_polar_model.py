@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import numpy as np
 import casadi as cas
 
 ##
@@ -152,15 +151,15 @@ class orbit_polar_model:
 if __name__ == '__main__':
 
     import sys, os
-    sys.path.append(os.path.realpath('../../'))
+    sys.path.append(os.path.realpath('../../../../'))
     sys.path.append(os.getcwd())
 
     # Import plotting library and runge kutta 4 integrator    
     import matplotlib.pyplot as plt
-    from integrators.rk4step import rk4step_ode
-    from models.kepler_orbit.kepler_orbit import kepler_orbit as orbit
-    from utils.conversion import *
-    from utils.xml_writer import * 
+    from src.spaceflight_playground.rk4step import rk4step_ode
+    from src.spaceflight_playground.models.kepler_orbit.kepler_orbit import kepler_orbit as orbit
+    from src.spaceflight_playground.utils.conversion import *
+    from src.spaceflight_playground.utils.xml_writer import *
 
     # Create a spacecraft instance
     spacecraft = orbit_polar_model()

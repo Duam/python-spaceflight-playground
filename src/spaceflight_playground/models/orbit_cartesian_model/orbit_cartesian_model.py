@@ -140,12 +140,12 @@ class orbit_cartesian_model:
 if __name__ == '__main__':
 
     import sys, os
-    sys.path.append(os.path.realpath('../../'))
+    sys.path.append(os.path.realpath('../../../../'))
     sys.path.append(os.getcwd())
 
     # Import plotting library and runge kutta 4 integrator    
     import matplotlib.pyplot as plt
-    from integrators.rk4step import rk4step_ode
+    from src.spaceflight_playground.rk4step import rk4step_ode
 
     # Create a spacecraft instance
     spacecraft = orbit_cartesian_model()

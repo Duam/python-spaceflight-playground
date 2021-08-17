@@ -13,8 +13,8 @@ sys.path.append(os.getcwd())
 
 import casadi as cas
 import numpy as np
-from models.orbit_polar_model.orbit_polar_model import orbit_polar_model
-from integrators.rk4step import rk4step_L, rk4step_ode
+from src.spaceflight_playground.models.orbit_polar_model.orbit_polar_model import orbit_polar_model
+from src.spaceflight_playground.rk4step import rk4step_L, rk4step_ode
 
 # Create a spacecraft instance
 spacecraft = orbit_polar_model()

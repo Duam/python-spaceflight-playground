@@ -9,13 +9,14 @@
 
 
 import sys, os
-sys.path.append(os.path.realpath('../'))
+sys.path.append(os.path.realpath('../../../'))
 sys.path.append(os.getcwd())
 
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
-import models.kepler_orbit.kepler_orbit as orbit
+from src.spaceflight_playground import models as orbit
+
 
 ##
 # @class orbit_animator
