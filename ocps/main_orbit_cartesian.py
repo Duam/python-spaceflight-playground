@@ -13,7 +13,7 @@ sys.path.append(os.getcwd())
 
 import casadi as cas
 import numpy as np
-from src.spaceflight_playground.models.orbit_cartesian_model.orbit_cartesian_model import orbit_cartesian_model
+from src.spaceflight_playground.models.orbit_cartesian_model import orbit_cartesian_model
 from src.spaceflight_playground.rk4step import rk4step_L, rk4step_ode
 
 # Create a spacecraft instance

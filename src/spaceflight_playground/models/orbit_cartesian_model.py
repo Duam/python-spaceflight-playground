@@ -140,7 +140,7 @@ class orbit_cartesian_model:
 if __name__ == '__main__':
 
     import sys, os
-    sys.path.append(os.path.realpath('../../../../'))
+    sys.path.append(os.path.realpath('../../../'))
     sys.path.append(os.getcwd())
 
     # Import plotting library and runge kutta 4 integrator    

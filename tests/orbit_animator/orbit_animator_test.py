@@ -11,9 +11,9 @@ sys.path.append(os.getcwd())
 
 import numpy as np
 
-from src.spaceflight_playground.models.kepler_orbit.kepler_orbit import kepler_orbit as orbit
+from src.spaceflight_playground.models.kepler_orbit import kepler_orbit as orbit
 from src.spaceflight_playground.utils import read_from_xml
-from src.spaceflight_playground.utils.orbit_animator import orbit_animator
+from src.spaceflight_playground.orbit_animator import orbit_animator
 
 
 # Read the trajectory from the xml file

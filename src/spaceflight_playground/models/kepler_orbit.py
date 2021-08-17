@@ -8,10 +8,26 @@
 import numpy as np
 
 import sys, os
-sys.path.append(os.path.realpath('../../../../'))
+sys.path.append(os.path.realpath('../../../'))
 sys.path.append(os.getcwd())
 
-from src.spaceflight_playground.utils.conversion import pol2cart, state_pol2cart
+from src.spaceflight_playground.conversion import pol2cart, state_pol2cart
+
+"""
+# Model
+TODO
+
+## Parameters
+TODO
+
+## Methods
+TODO
+
+## Coordinate system definitions
+- X axis is horizontal, points right (vernal equinox)
+- Y axis is vertical, points upwards
+- Z axis points out of the screen (Body's rotational axis)
+"""
 
 ##
 # @class kepler_orbit

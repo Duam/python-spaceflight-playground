@@ -2,6 +2,32 @@
 
 import casadi as cas
 
+"""
+# Model
+This model is that of a two dimensional point mass rocket. Its thrusters can fire in any direction.
+
+## Inputs
+- T_r: Scaled thrust in radial direction (Between 0 and 1)
+- T_theta: Scaled thrust in tangential direction (Between 0 and 1)
+
+## Disturbances
+No disturbances
+
+## States
+- r: Altitude (km)
+- theta: Angle from horizontal axis (microRad)
+- rDot: Radial velocity (km per second)
+- thetaDot: Angular velocity (microRad per second)
+- m: Mass (kg)
+
+# Assumptions/Simplifications:
+- No atmosphere, because it's the moon
+- The moon doesn't rotate
+- Spacecraft has no rotation
+- Thrusters can fire in any direction
+- The moon is a point mass and perfectly circular
+"""
+
 ##
 # @class orbit_polar_model
 # @brief Model of a 2-dimensional point mass spacecraft in polar coordinates.
@@ -151,15 +177,15 @@ class orbit_polar_model:
 if __name__ == '__main__':
 
     import sys, os
-    sys.path.append(os.path.realpath('../../../../'))
+    sys.path.append(os.path.realpath('../../../'))
     sys.path.append(os.getcwd())
 
     # Import plotting library and runge kutta 4 integrator    
     import matplotlib.pyplot as plt
     from src.spaceflight_playground.rk4step import rk4step_ode
-    from src.spaceflight_playground.models.kepler_orbit.kepler_orbit import kepler_orbit as orbit
-    from src.spaceflight_playground.utils.conversion import *
-    from src.spaceflight_playground.utils.xml_writer import *
+    from src.spaceflight_playground.models.kepler_orbit import kepler_orbit as orbit
+    from src.spaceflight_playground.conversion import *
+    from src.spaceflight_playground.xml_writer import *
 
     # Create a spacecraft instance
     spacecraft = orbit_polar_model()
