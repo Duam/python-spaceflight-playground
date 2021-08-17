@@ -8,7 +8,10 @@ from typing import Union
 
 @dataclass
 class PolarOrbiterState:
-    vector: Union[np.ndarray, cas.MX]
+    vector: Union[cas.DM, cas.MX]
+    def scale(self, factors: Union[cas.DM]):
+        self.vector *= factors
+        return self
     @property
     def distance(self):
         """The distance to the origin [m]."""
@@ -32,19 +35,22 @@ class PolarOrbiterState:
 
 @dataclass
 class PolarOrbiterThrust:
-    vector: Union[np.ndarray, cas.MX]
+    vector: Union[cas.MX]
     @property
     def radial(self):
         """The radial thrust component [N]."""
         return self.vector[0]
     @property
-    def y(self):
+    def angular(self):
         """The angular thrust component [kg * rad/s^2]."""
         return self.vector[1]
 
 @dataclass
 class PolarOrbiterStateDerivative:
-    vector: Union[np.ndarray, cas.MX]
+    vector: Union[cas.DM, cas.MX]
+    def scale(self, factors: Union[cas.DM]):
+        self.vector *= factors
+        return self
     @property
     def radial_velocity(self):
         """The velocity component in radial direction [m/s]."""
@@ -137,13 +143,13 @@ class PolarOrbiter:
         # Mass flow
         mass_flow = - self.fuel_consumption_per_second * (radial_thrust**2 * angular_thrust**2)
 
-        return PolarOrbiterStateDerivative([
+        return PolarOrbiterStateDerivative(cas.vertcat(
             radial_velocity,
             angular_velocity,
             radial_acceleration,
             angular_acceleration,
             mass_flow,
-        ])
+        ))
 
 
     def ode_scaled(self, state_scaled: PolarOrbiterState, thrust: PolarForce) -> PolarOrbiterStateDerivative:
@@ -152,7 +158,9 @@ class PolarOrbiter:
         :param thrust: The thrust applied to the spacecraft in the corotating frame.
         :return: The scaled state derivative in polar coordinates.
         """
-        return self.ode(state_scaled.vector * self.unscale, thrust).vector * self.scale
+        state = state_scaled.scale(self.unscale)
+        state_derivative = self.ode(state, thrust)
+        return state_derivative.scale(self.scale)
 
 
 ##

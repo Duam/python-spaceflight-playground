@@ -58,7 +58,14 @@ state_derivative = spacecraft.ode_scaled(state, thrust).vector
 ode = cas.Function('ode', [x, u], [spacecraft.ode_scaled(PolarOrbiterState(x), PolarOrbiterThrust(u)).vector],
                    ['state', 'thrust'], ['state_derivative'])
 
-print(ode)
+initial_state = PolarOrbiterState(
+    cas.DM([
+        spacecraft.moon_radius,
+        0,
+        0,
+        0,
+        spacecraft.full_mass
+    ])).scale(spacecraft.scale)
 
 # Create an integrator for the ode
 Xk = x
@@ -90,7 +97,7 @@ us_theta[0:n_theta_stop] = 0.2 * np.ones(n_theta_stop)
 us_init[:,1] = us_theta
 
 xs = cas.DM.zeros((num_samples + 1, spacecraft.num_states))
-xs[0,:] = spacecraft.x0_scaled
+xs[0,:] = initial_state.vector
 for k in range(num_samples):
     xs[k+1,:] = F(xs[k,:],us_init[k,:])
 
