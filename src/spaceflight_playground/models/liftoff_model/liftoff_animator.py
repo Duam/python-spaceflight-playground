@@ -31,8 +31,8 @@ class liftoff_animator:
     def __init__(self, trajectory, figNum = 0):
     
         # Trajectory to plot
-        self.T = trajectory.T
-        self.N = trajectory.N
+        self.T = trajectory.total_time
+        self.N = trajectory.num_samples
         self.params = trajectory.rocket.params
         self.xs = trajectory.xs
         self.us = trajectory.us

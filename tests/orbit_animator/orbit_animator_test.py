@@ -13,7 +13,7 @@ import numpy as np
 
 from src.spaceflight_playground.models.kepler_orbit import kepler_orbit as orbit
 from src.spaceflight_playground.utils import read_from_xml
-from src.spaceflight_playground.orbit_animator import orbit_animator
+from src.spaceflight_playground.orbitanimator import OrbitAnimator
 
 
 # Read the trajectory from the xml file
@@ -47,7 +47,53 @@ anim_params = {
 }
 
 # Create an animator
-anim = orbit_animator(anim_params)
+anim = OrbitAnimator(anim_params)
 
 # Run the animator
 anim.run(10)
+
+
+##
+# Execute this script to test the animator
+##
+if __name__ == '__main__':
+
+
+""" From another file """
+# Create a trajectory
+T = 10.0
+N = 10
+R = 5
+
+xPoses = [0,1,2,3,4,5,6,7,8,9]
+yPoses = [9,8,7,6,5,4,3,2,1,0]
+xVelos = [1,1,1,1,1,1,1,1,1,1]
+yVelos = [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+xForces = [0,0,0,0,0,0,0,0,0,0]
+yForces = [0,0,0,0,0,0,0,0,0,0]
+
+# Create a target orbit
+orbit_target = orbit.kepler_orbit()
+orbit_target.fromEllipseParams(0.3, 0.0, 3)
+
+# Save trajectory in a dictionary
+params = {}
+params['T'] = T
+params['N'] = N
+params['body_radius'] = R
+params['target_orbit'] = orbit_target
+params['isCartesian'] = True
+params['xPositions'] = xPoses
+params['yPositions'] = yPoses
+params['xVelocities'] = xVelos
+params['yVelocities'] = yVelos
+params['xForces'] = xForces
+params['yForces'] = yForces
+
+# Create animator
+animator = OrbitAnimator(params)
+
+# Run animator
+animator.run(fps=1)
+
+# TODO load pre-optimized trajectory from xml

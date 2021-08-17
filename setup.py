@@ -8,6 +8,7 @@ setup(
     install_requires=[
         'numpy',
         'casadi',
+        'matplotlib',
     ],
     python_requires='>=3.6',
     package_dir={'': 'src'},
