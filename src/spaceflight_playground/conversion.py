@@ -1,133 +1,107 @@
-#!/usr/bin/python3
-
-##
-# @file conversion.py
-# @author Paul Daum
-##
-
 import numpy as np
+from dataclasses import dataclass
+from Typing import Tuple, List
 
-##
-# @brief Converts cartesian coordinates to polar coordinates
-# @param x The x coordinate in the cartesian frame
-# @param y The y coordinate in the cartesian frame
-# @return The polar coordinates [theta, rho]
-##
-def cart2pol (x, y):
-    theta = np.arctan2(y, x)
-    rho = np.hypot(x, y)
-    return theta, rho
+@dataclass
+class PolarState:
+    distance: float  # The distance to the origin [m].
+    angle: float  # The angle to the positive x-axis, measured counter-clockwise [rad].
+    radial_velocity: float  # The velocity component in radial direction [m/s].
+    angular_velocity: float  # The velocity component in tangential direction [rad/s].
+    def as_numpy_vector(self):
+        return np.array([distance, angle, radial_velocity, angular_velocity])
 
-##
-# @brief Converts polar coordinates to cartesian coordinates
-# @param theta The angle coordinate in the polar frame
-# @param rho The distance coordinate in the polar frame
-# @return The cartesian coordinates [x, y]
-##
-def pol2cart (theta, rho):
-    x = rho * np.cos(theta)
-    y = rho * np.sin(theta)
-    return x, y
+@dataclass
+class CartesianState:
+    x_position: float
+    y_position: float
+    x_velocity: float
+    y_velocity: float
+    def as_numpy_vector(self):
+        return np.array([x_position, y_position, x_velocity, y_velocity])
 
-## 
-# @brief Converts a state vector in polar coordinates to cartesian coordinates
-# @param x_pol The state vector in polar coordinates:
-#           - rho: Distance from origin (m)
-#           - theta: Angle, measured from horizontal plane in right-hand direction (rad)
-#           - rhoDot. Radial velocity (m/s)
-#           - thetaDot: Angular velocity (rad/s)
-# @return The state vector in cartesian coordinates
-#           - xPos: The x position (m)
-#           - yPos: The y position (m)
-#           - xVel: The x velocity (m/s)
-#           - yVel: The y velocity (m/s)
-##
-def state_pol2cart (x_pol):
+@dataclass
+class PolarForce:
+    radial: float
+    angular: float
+    def as_numpy_vector(self):
+        return np.array([radial, angular])
 
-    # Get states
-    rho = x_pol[0]      # Distance (Radius)
-    theta = x_pol[1]    # Angle
-    rhoDot = x_pol[2]   # Radial velocity
-    thetaDot = x_pol[3] # Angular velocity
+@dataclass
+class CartesianForce:
+    x: float
+    y: float
+    def as_numpy_vector(self):
+        return np.array([x, y])
 
-    # Compute position in cartesian frame
-    xPos, yPos = pol2cart(theta, rho)
 
-    # Expand position into a 3d vector (required for cross product)
-    pos = np.array([xPos, yPos, 0])
-    
-    # Rewrite angular velocity as rotation around z-axis
-    thetaDot = np.array([0, 0, thetaDot])
+def cart2pol (x_position: float, y_position: float) -> Tuple[float, float]:
+    """Converts cartesian coordinates to polar coordinates.
+    :param x_position: The x coordinate in the cartesian frame.
+    :param y_position: The y coordinate in the cartesian frame.
+    :return: The polar coordinates [angle, distance].
+    """
+    angle = np.arctan2(y, x)
+    distance = np.hypot(x, y)
+    return angle, distance
+
+
+def pol2cart (angle: float, distance: float) -> Tuple[float, float]:
+    """Converts polar coordinates to cartesian coordinates.
+    :param angle: The angle coordinate in the polar frame.
+    :param distance: The distance coordinate in the polar frame.
+    :return: The cartesian coordinates [x-position, y-position].
+    """
+    x_position = distance * np.cos(angle)
+    y_position = distance * np.sin(angle)
+    return x_position, y_position
+
+
+def state_pol2cart(state_pol: PolarState) -> CartesianState:
+    """Converts a state vector in polar coordinates to cartesian coordinates.
+    :param state_pol: The state in polar coordinates.
+    :return: The state in cartesian coordinates.
+    """
+    # Compute position in cartesian frame and expand into 3d (for cross-product)
+    x_position, y_position = pol2cart(state_pol.angle, state_pol.distance)
+
+    # Expand quantities into 3d (for cross-product)
+    position = np.array([x_position, y_position, 0])
+    angular_velocity = np.array([0, 0, state_pol.angular_velocity])
 
     # Compute radial and rotational velocities in cartesian frame
-    vel_rad = np.array([rhoDot, 0, 0])
-    vel_rot = np.cross(thetaDot, pos)
+    radial_velocity = np.array([state_pol.radial_velocity, 0, 0])
+    tangential_velocity = np.cross(angular_velocity, position)
+    velocity = radial_velocity + tangential_velocity
 
-    # Add up velocities
-    vel = vel_rad + vel_rot
-    
-    # Extract velocity components
-    xVel = vel[0]
-    yVel = vel[1]
-
-    # Stack them into a vector
-    x_cart = np.array([xPos, yPos, xVel, yVel])
-
-    return x_cart
+    return CartesianState(position[0], position[1], velocity[0], velocity[1])
 
 
-## 
-# @brief Converts a state and control trajectory from polar coordinates
-#        to cartesian coordinates
-# @param xs_pol The state trajectory in polar coordinates:
-#           - rho: Distance from origin (m)
-#           - theta: Angle, measured from horizontal plane in right-hand direction (rad)
-#           - rhoDot. Radial velocity (m/s)
-#           - thetaDot: Angular velocity (rad/s)
-# @param us_pol The control trajectory in polar coordinates
-#           - u_rho The radial control force/acceleration
-#           - u_theta The angular control force/acceleration
-# @return All state vectors (stacked) in cartesian coordinates
-#           - xPos: The x position (m)
-#           - yPos: The y position (m)
-#           - xVel: The x velocity (m/s)
-#           - yVel: The y velocity (m/s)
-# @return All control vectors (stacked) in cartesian coordinates
-#           - u_x The control force/acceleration in x direction
-#           - u_y The control force/acceleration in y direction
-##        
-def traj_pol2cart (xs_pol, us_pol):
+def force_pol2cart(angle: float, force_pol: PolarForce) -> CartesianForce:
+    """Converts a force from polar coordinates to cartesian coordinates.
+    :param angle: The angle of the corotating frame.
+    :param force_pol: The force in polar coordinates.
+    :return: The force in cartesian coordinates
+    """
+    rotation = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+    return CartesianForce(np.dot(rotation, force_pol.as_numpy_vector()))
 
-    # Get the trajectory length
-    N_x = xs_pol[0,:].size
-    N_u = us_pol[0,:].size
 
+def traj_pol2cart (
+        states_pol: List[PolarState],
+        forces_pol: List[PolarForce],
+) -> Tuple[List[CartesianState], List[CartesianForce]]:
+    """Converts a state and control trajectory from polar coordinates to cartesian coordinates.
+    :param states_pol: The state trajectory in polar coordinates.
+    :param controls_pol: The force trajectory in polar coordinates.
+    :return: The state trajectory in cartesian coordinates, the force trajectory in cartesian coordinates.
+    """
     # Check if trajectories are compatible
-    if (N_x != N_u+1):
-        print("Error in traj_pol2cart: N_x != N_u + 1. Check your input.")
-        print("N_x = " + str(N_x))
-        print("N_u = " + str(N_u))
-        return -1
+    assert states_pol.size == forces_pol.size + 1,\
+        f"There has to be one more state than there" \
+        f"are controls! Nx = {states_pol.size}, Nu = {forces_pol.size}"
 
-    # Convert all state vectors to cartesian coordinates
-    xs_cart = np.zeros((4,N_x))
-    for k in range(N_x):
-        xs_cart[:,k] = state_pol2cart(xs_pol[:,k])
-
-    # Convert controls by using the corotating reference frame
-    us_cart = us_pol
-    for k in range(N_u):
-        theta = xs_pol[1,k]
-        rotation = np.array(
-            [[np.cos(theta), -np.sin(theta)],
-             [np.sin(theta),  np.cos(theta)]])
-        us_cart[:,k] = np.dot(rotation, us_cart[:,k])
-
-    # return
-    return xs_cart, us_cart
-
-##
-# Execute this script to test the functions
-##    
-if __name__ == '__main__':
-    print("I NEEDS TESTING")
+    # Convert states and forces to cartesian coordinates
+    states_cart = [state_pol2cart(state_pol) for state_pol in states_pol]
+    forces_cart = [force_pol2cart(states_pol[k].angle, forces_pol[k]) for k in range(forces_pol.size)]
+    return states_cart, forces_cart
