@@ -1,44 +1,70 @@
 #!/usr/bin/python3
 
 import casadi as cas
+import numpy as np
+from dataclasses import dataclass
 from spaceflight_playground.conversion import PolarForce
+from typing import Union
 
-"""
-## Inputs
-- T_r: Scaled thrust in radial direction (Between 0 and 1)
-- T_theta: Scaled thrust in tangential direction (Between 0 and 1)
-
-## Disturbances
-No disturbances
-
-## States
-- r: Altitude (km)
-- theta: Angle from horizontal axis (microRad)
-- rDot: Radial velocity (km per second)
-- thetaDot: Angular velocity (microRad per second)
-- m: Mass (kg)
-
-"""
 @dataclass
 class PolarOrbiterState:
-    distance: float  # The distance to the origin [m].
-    angle: float  # The angle to the positive x-axis, measured counter-clockwise [rad].
-    radial_velocity: float  # The velocity component in radial direction [m/s].
-    angular_velocity: float  # The velocity component in tangential direction [rad/s].
-    mass: float  # The total mass of the orbiter [kg].
-    def as_numpy_vector(self):
-        return np.array([distance, angle, radial_velocity, angular_velocity, mass])
+    vector: Union[np.ndarray, cas.MX]
+    @property
+    def distance(self):
+        """The distance to the origin [m]."""
+        return self.vector[0]
+    @property
+    def angle(self):
+        """The angle to the positive x-axis, measured counter-clockwise [rad]."""
+        return self.vector[1]
+    @property
+    def radial_velocity(self):
+        """The velocity component in radial direction [m/s]."""
+        return self.vector[2]
+    @property
+    def angular_velocity(self):
+        """The velocity component in tangential direction [rad/s]."""
+        return self.vector[3]
+    @property
+    def mass(self):
+        """The total mass of the orbiter [kg]"""
+        return self.vector[4]
 
+@dataclass
+class PolarOrbiterThrust:
+    vector: Union[np.ndarray, cas.MX]
+    @property
+    def radial(self):
+        """The radial thrust component [N]."""
+        return self.vector[0]
+    @property
+    def y(self):
+        """The angular thrust component [kg * rad/s^2]."""
+        return self.vector[1]
 
 @dataclass
 class PolarOrbiterStateDerivative:
-    radial_velocity: float  # The velocity component in radial direction [m/s].
-    angular_velocity: float  # The velocity component in tangential direction [rad/s].
-    radial_acceleration: float  # The acceleration component in radial direction [m/s^2].
-    angular_acceleration: float  # The acceleration component in tangential direction [rad/s^2].
-    mass_flow: float  # The total mass rate of change of the orbiter [kg/s].
-    def as_numpy_vector(self):
-        return np.array([radial_velocity, angular_velocity, radial_acceleration, angular_acceleration, mass_flow])
+    vector: Union[np.ndarray, cas.MX]
+    @property
+    def radial_velocity(self):
+        """The velocity component in radial direction [m/s]."""
+        return self.vector[0]
+    @property
+    def angular_velocity(self):
+        """The velocity component in tangential direction [rad/s]."""
+        return self.vector[1]
+    @property
+    def radial_acceleration(self):
+        """The acceleration component in radial direction [m/s^2]."""
+        return self.vector[2]
+    @property
+    def angular_acceleration(self):
+        """The acceleration component in tangential direction [rad/s^2]."""
+        return self.vector[3]
+    @property
+    def mass(self):
+        """The total mass of the orbiter [kg]"""
+        return self.vector[4]
 
 
 class PolarOrbiter:
@@ -73,6 +99,15 @@ class PolarOrbiter:
         )
         self.unscale = self.scale**-1
 
+    @property
+    def num_states(self):
+        return 5
+
+    @property
+    def num_forces(self):
+        return 2
+
+
 
     def ode(self, state: PolarOrbiterState, force: PolarForce) -> PolarOrbiterStateDerivative:
         """The ODE describing the dynamics of the spacecraft.
@@ -102,13 +137,13 @@ class PolarOrbiter:
         # Mass flow
         mass_flow = - self.fuel_consumption_per_second * (radial_thrust**2 * angular_thrust**2)
 
-        return PolarOrbiterStateDerivative(
+        return PolarOrbiterStateDerivative([
             radial_velocity,
             angular_velocity,
             radial_acceleration,
             angular_acceleration,
-            mass_flow
-        )
+            mass_flow,
+        ])
 
 
     def ode_scaled(self, state_scaled: PolarOrbiterState, thrust: PolarForce) -> PolarOrbiterStateDerivative:
@@ -117,7 +152,7 @@ class PolarOrbiter:
         :param thrust: The thrust applied to the spacecraft in the corotating frame.
         :return: The scaled state derivative in polar coordinates.
         """
-        return self.ode(state_scaled * self.unscale, thrust) * self.scale
+        return self.ode(state_scaled.vector * self.unscale, thrust).vector * self.scale
 
 
 ##

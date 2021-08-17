@@ -7,17 +7,13 @@
 #        a specified altitude. Uses multiple shooting.
 ##
 
-import sys, os
-sys.path.append(os.path.realpath('../'))
-sys.path.append(os.getcwd())
-
 import casadi as cas
 import numpy as np
-from src.spaceflight_playground.models.polar_orbiter import orbit_polar_model
-from src.spaceflight_playground.rk4step import rk4step_L, rk4step_ode
+from spaceflight_playground.models.polar_orbiter import PolarOrbiter, PolarOrbiterState, PolarOrbiterThrust
+from spaceflight_playground.rk4step import rk4step_L, rk4step_ode
 
 # Create a spacecraft instance
-spacecraft = orbit_polar_model()
+spacecraft = PolarOrbiter()
 
 # Print parameters
 print("== Universe parameters ==")
@@ -29,69 +25,73 @@ print("== Spacecraft parameters ==")
 print("Initial mass: " + str(spacecraft.full_mass) + " kg")
 print("Empty mass: " + str(spacecraft.empty_mass) + " kg")
 print("Max. thrust: " + str(spacecraft.max_thrust) + " N")
-print("Fuel consumption coeff:" + str(spacecraft.km) + " kg/s")
-print("Initial state: " + str(spacecraft.x0))
-print("Initial state (scaled): " + str(spacecraft.x0_scaled))
+print("Fuel consumption coeff:" + str(spacecraft.fuel_consumption_per_second) + " kg/s")
 print("State scale vector: " + str(spacecraft.scale))
 print("State unscale vector: " + str(spacecraft.unscale))
-print("Number of states: " + str(spacecraft.num_states))
-print("Number of controls: " + str(spacecraft.num_forces))
+
 
 # Simulation parameters
-T = 600.0
-N = 100
-DT = T/N
+total_time = 600.0
+num_samples = 100
+timestep = total_time / num_samples
 
 # Integration parameters
-nn = 10
-h = DT/nn
+integrator_substeps = 10
+integrator_stepsize = timestep / integrator_substeps
 
 # Values for terminal constraints
-altitude_T = 20 # [km]
-angVel_T = 10**3 * np.sqrt(spacecraft.mu / (spacecraft.moon_radius + 10 ** 3 * altitude_T) ** 3)
+target_altitude = 20  # [km]
+target_angular_velocity = 10 ** 3 * np.sqrt(spacecraft.gravitational_constant * spacecraft.moon_mass /\
+                                            (spacecraft.moon_radius + 10 ** 3 * target_altitude) ** 3)
 
 # Print out values
 print("== Terminal values ==")
-print("Altitude: " + str(altitude_T) + " km")
-print("Angular velocity: " + str(angVel_T) + " microrad")
+print("Altitude: " + str(target_altitude) + " km")
+print("Angular velocity: " + str(target_angular_velocity) + " microrad")
 
 # Create system model in casadi
 x = cas.MX.sym('x', spacecraft.num_states, 1)
 u = cas.MX.sym('u', spacecraft.num_forces, 1)
-f = cas.Function('f', [x,u], [spacecraft.ode_scaled(x, u)], ['x', 'u'], ['xdot'])
+state = PolarOrbiterState(x)
+thrust = PolarOrbiterThrust(u)
+state_derivative = spacecraft.ode_scaled(state, thrust).vector
+ode = cas.Function('ode', [x, u], [spacecraft.ode_scaled(PolarOrbiterState(x), PolarOrbiterThrust(u)).vector],
+                   ['state', 'thrust'], ['state_derivative'])
+
+print(ode)
 
 # Create an integrator for the ode
 Xk = x
-for k in range(nn):
-    Xk = rk4step_ode(f, Xk, u, h)
-F = cas.Function('F', [x,u], [Xk], ['x','u'], ['xk'])
+for k in range(integrator_substeps):
+    Xk = rk4step_ode(ode, Xk, u, integrator_stepsize)
+F = cas.Function('F', [x, u], [Xk], ['x','u'], ['xk'])
 
 # Create stage cost for the OCP
 l = u[0]**2 + u[1]**2
-l = cas.Function('l', [x,u], [l], ['x','u'], ['l'])
+l = cas.Function('l', [x, u], [l], ['x','u'], ['l'])
 
 # Create an integrator for the stage cost
 Lk = 0
-for k in range(nn):
-    Lk = rk4step_L(l, Lk, x, u, h)
+for k in range(integrator_substeps):
+    Lk = rk4step_L(l, Lk, x, u, integrator_stepsize)
 L = cas.Function('L', [x,u], [Lk], ['x','u'], ['L'])
 
 # Create an initial guess for the OCP by forward simulation
-us_init = np.zeros((N,spacecraft.num_forces))
+us_init = np.zeros((num_samples, spacecraft.num_forces))
 n_r_stop = 60
 n_theta_stop = 85
 
-us_r = np.zeros(N)
+us_r = np.zeros(num_samples)
 us_r[0:n_r_stop] = 0.1075 * np.ones(n_r_stop)
 us_init[:,0] = us_r
 
-us_theta = np.zeros(N)
+us_theta = np.zeros(num_samples)
 us_theta[0:n_theta_stop] = 0.2 * np.ones(n_theta_stop)
 us_init[:,1] = us_theta
 
-xs = cas.DM.zeros((N+1, spacecraft.num_states))
+xs = cas.DM.zeros((num_samples + 1, spacecraft.num_states))
 xs[0,:] = spacecraft.x0_scaled
-for k in range(N):
+for k in range(num_samples):
     xs[k+1,:] = F(xs[k,:],us_init[k,:])
 
 xs_init = xs.full()
@@ -104,8 +104,8 @@ print(xs_init)
 print("Initial guess computed. Now starting creation of OCP.")
 
 # Create the optimization variables
-X = cas.MX.sym('X', spacecraft.num_states, N)
-U = cas.MX.sym('U', spacecraft.num_forces, N)
+X = cas.MX.sym('X', spacecraft.num_states, num_samples)
+U = cas.MX.sym('U', spacecraft.num_forces, num_samples)
 
 # Start with empty NLP
 w = []      # Optimization variables (xs, us)
@@ -119,7 +119,7 @@ ubg = []    # Upper bound on constraints
 
 # Formulate NLP
 Xk = xs_init[0,:]
-for k in range(N):
+for k in range(num_samples):
     
     # NLP variable for control
     Uk = cas.MX.sym('U_' + str(k), spacecraft.num_forces, 1)
@@ -166,8 +166,8 @@ for k in range(N):
 
 # Terminal constraint on altitude
 g = cas.vertcat(g, Xk_end[0])
-lbg = cas.vertcat(lbg, altitude_T)
-ubg = cas.vertcat(ubg, altitude_T)
+lbg = cas.vertcat(lbg, target_altitude)
+ubg = cas.vertcat(ubg, target_altitude)
 
 # Terminal constraint on radial velocity
 g = cas.vertcat(g, Xk_end[2])
@@ -176,8 +176,8 @@ ubg = cas.vertcat(ubg, 0)
 
 # Terminal constraint on angular velocity
 g = cas.vertcat(g, Xk_end[3])
-lbg = cas.vertcat(lbg, angVel_T)
-ubg = cas.vertcat(ubg, angVel_T)
+lbg = cas.vertcat(lbg, target_angular_velocity)
+ubg = cas.vertcat(ubg, target_angular_velocity)
 
 # Print debug message
 print("== OCP created ==")
@@ -216,8 +216,8 @@ print("== OCP solved ==")
 sol = solver_out['x']
 print("sol size: " + str(sol.shape) + ", type: " + str(type(sol)))
 
-u_opt = cas.DM.zeros((N,spacecraft.num_forces))
-x_opt = cas.DM.zeros((N,spacecraft.num_states))
+u_opt = cas.DM.zeros((num_samples, spacecraft.num_forces))
+x_opt = cas.DM.zeros((num_samples, spacecraft.num_states))
 
 nxnu = spacecraft.num_states + spacecraft.num_forces
 

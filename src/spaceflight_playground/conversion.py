@@ -1,6 +1,6 @@
 import numpy as np
 from dataclasses import dataclass
-from Typing import Tuple, List
+from typing import Tuple, List
 
 @dataclass
 class PolarState:
