@@ -62,61 +62,25 @@ class AR1_model:
         self.c = self.mean * (1 - self.phi)
         self.normdist_stddev = np.sqrt((1 - self.phi**2) * self.variance)
 
-    ##
-    # @brief Wrapper for numpy normal sampler
-    ##
+
     def sample_normal(self):
+        """Wrapper for numpy normal sampler
+        :return: Normally distributed sample.
+        """
         return np.random.normal(0, self.normdist_stddev)
 
-    ## 
-    # @brief Computes the next sample and updates the internal value
-    # @return The next sample
-    ##
+
     def update(self):
+        """Computes the next sample and updates the internal value.
+        :return: The next sample.
+        """
         self.xCur = self.c + self.phi * self.xCur + self.sample_normal()
         return self.xCur
 
-    ## 
-    # @brief Convenience method: Sample value getter
-    # @return Current sample value
-    ##
+
     def getCurrentSample(self):
+        """Convenience method: sample value getter.
+        :return: Current sample value.
+        """
         return self.xCur
 
-
-##
-# Execute this script to test the model
-##    
-if __name__ == '__main__':
-
-    # Import plotting library
-    import matplotlib.pyplot as plt
-
-    # Create an AR1 model instance
-    ar1 = AR1_model(phi=0.3, mean=5, variance=10)
-
-    # Print out the parameters
-    print("AR1-model parameters:")
-    print("Process mean = " + str(ar1.mean))
-    print("Process variance = " + str(ar1.variance))
-    print("Autoregression parameter phi = " + str(ar1.phi))
-    print("Autoregression constant parameter c = " + str(ar1.c))
-    print("Normal distribution stddev = " + str(ar1.normdist_stddev))
-    print("Initialized sample value = " + str(ar1.xCur))
-
-    # Simulation parameters
-    N = 1000
-    kAxis = range(N)
-
-    # Simulation result container
-    samples = np.array([])
-
-    # Simulate and store results
-    for k in kAxis:
-        samples = np.append(samples, ar1.update())
-
-    # Plot results
-    plt.plot(kAxis, samples)
-    plt.xlabel('Timestep')
-    plt.ylabel('Sample value')
-    plt.show()
