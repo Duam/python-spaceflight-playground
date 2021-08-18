@@ -13,7 +13,7 @@ import numpy as np
 
 from src.spaceflight_playground.models.kepler_orbit import kepler_orbit as orbit
 from src.spaceflight_playground.utils import read_from_xml
-from src.spaceflight_playground.orbitanimator import OrbitAnimator
+from spaceflight_playground.orbiter.orbitanimator import OrbitAnimator
 
 
 # Read the trajectory from the xml file
