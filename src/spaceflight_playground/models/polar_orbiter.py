@@ -85,22 +85,22 @@ class PolarOrbiter:
         - The moon is a point mass and perfectly circular
         """
         # Universe parameters
-        self.gravitational_constant = 6.67408 * 10 ** -11  # [m^3/(kg*s^2)]
-        self.moon_mass = 7.348 * 10 ** 22  # [kg]
-        self.moon_radius = 1737.5 * 10 ** 3  # [m]
+        self.gravitational_constant = 6.67408 * 1e-11  # [m^3/(kg*s^2)]
+        self.moon_mass = 7.348 * 1e22  # [kg]
+        self.moon_radius = 1737.5 * 1e3  # [m]
 
         # Spacecraft parameters
-        self.full_mass = 20.0 * 10 ** 3  # [kg]
-        self.empty_mass = 1.0 * 10 ** 3  # [kg]
-        self.max_thrust = 30.0 * 10 ** 4  # [N]
+        self.full_mass = 20.0 * 1e3  # [kg]
+        self.empty_mass = 1.0 * 1e3  # [kg]
+        self.max_thrust = 30.0 * 1e4  # [N]
         self.fuel_consumption_per_second = 100.0  # [kg/s]
 
         # Scaling factor
         self.scale = cas.vertcat(
-            1e-3, # m -> km
+            1e-6, # m -> Mm
             1e+3, # rad -> millirad
             1e-3, # m/s -> km/s
-            1e+3, # rad/s -> millirad/s
+            1e+6, # rad/s -> microrad/s
             1e-3  # kg -> t
         )
         self.unscale = self.scale**-1
