@@ -9,7 +9,7 @@
 import casadi as cas
 import numpy as np
 import matplotlib.pyplot as plt
-from spaceflight_playground.orbiter.polar_orbiter import PolarOrbiter, PolarOrbiterState, PolarOrbiterThrust
+from spaceflight_playground.orbiter.orbiter_model import PolarOrbiter, PolarOrbiterState, PolarOrbiterThrust
 from spaceflight_playground.rk4step import rk4step_L, rk4step_ode
 
 # Create a spacecraft instance
