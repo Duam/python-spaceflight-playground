@@ -1,14 +1,15 @@
 #!/usr/bin/python3
 
-##
-# @file main_orbit_polar.py
-# @author Paul Daum
-# @brief Optimize spacecraft trajectory to reach a circular orbit at 
-#        a specified altitude. Uses multiple shooting.
-##
+"""
+:author: Paul Daum
+:brief: Optimizes a spacecraft's trajectory to reach a circular orbit at a specified altitude.
+    Uses multiple shooting.
+"""
 
 import casadi as cas
 import numpy as np
+from scipy import signal
+import matplotlib.pyplot as plt
 from spaceflight_playground.models.polar_orbiter import PolarOrbiter, PolarOrbiterState, PolarOrbiterThrust
 from spaceflight_playground.rk4step import rk4step_L, rk4step_ode
 
@@ -20,7 +21,6 @@ print("== Universe parameters ==")
 print("Grav. const. G: " + str(spacecraft.gravitational_constant) + " m^3/(kg*s^2)")
 print("Moon mass M: " + str(spacecraft.moon_mass) + " kg")
 print("Moon radius R: " + str(spacecraft.moon_radius) + " m")
-
 print("== Spacecraft parameters ==")
 print("Initial mass: " + str(spacecraft.full_mass) + " kg")
 print("Empty mass: " + str(spacecraft.empty_mass) + " kg")
@@ -36,13 +36,14 @@ num_samples = 100
 timestep = total_time / num_samples
 
 # Integration parameters
-integrator_substeps = 10
+integrator_substeps = 1
 integrator_stepsize = timestep / integrator_substeps
 
 # Values for terminal constraints
 target_altitude = 20  # [km]
-target_angular_velocity = 10 ** 3 * np.sqrt(spacecraft.gravitational_constant * spacecraft.moon_mass /\
-                                            (spacecraft.moon_radius + 10 ** 3 * target_altitude) ** 3)
+target_distance = spacecraft.moon_radius + 1e3 * target_altitude
+target_angular_velocity = 1e3 * np.sqrt(spacecraft.gravitational_constant * spacecraft.moon_mass /
+                                        target_distance ** 3)
 
 # Print out values
 print("== Terminal values ==")
@@ -67,49 +68,90 @@ initial_state = PolarOrbiterState(
         spacecraft.full_mass
     ])).scale(spacecraft.scale)
 
+print(f"Initial state: {initial_state.vector}")
+
 # Create an integrator for the ode
 Xk = x
 for k in range(integrator_substeps):
     Xk = rk4step_ode(ode, Xk, u, integrator_stepsize)
-F = cas.Function('F', [x, u], [Xk], ['x','u'], ['xk'])
+F = cas.Function('F', [x, u], [Xk], ['x', 'u'], ['xk'])
 
 # Create stage cost for the OCP
-l = u[0]**2 + u[1]**2
-l = cas.Function('l', [x, u], [l], ['x','u'], ['l'])
+state_cost = u[0] ** 2 + u[1] ** 2
+state_cost = cas.Function('l', [x, u], [state_cost], ['x', 'u'], ['l'])
 
 # Create an integrator for the stage cost
 Lk = 0
 for k in range(integrator_substeps):
-    Lk = rk4step_L(l, Lk, x, u, integrator_stepsize)
-L = cas.Function('L', [x,u], [Lk], ['x','u'], ['L'])
+    Lk = rk4step_L(state_cost, Lk, x, u, integrator_stepsize)
+L = cas.Function('L', [x, u], [Lk], ['x', 'u'], ['L'])
 
 # Create an initial guess for the OCP by forward simulation
-us_init = np.zeros((num_samples, spacecraft.num_forces))
-n_r_stop = 60
-n_theta_stop = 85
+thrusts_initial_guess = np.zeros((num_samples, spacecraft.num_forces))
+n_r_stop = 50
+n_theta_stop = 50
 
-us_r = np.zeros(num_samples)
-us_r[0:n_r_stop] = 0.1075 * np.ones(n_r_stop)
-us_init[:,0] = us_r
+radial_thrusts = np.zeros(num_samples)
+radial_thrusts[0:n_r_stop] = 0.1075 * np.ones(n_r_stop)
+thrusts_initial_guess[:, 0] = radial_thrusts
 
-us_theta = np.zeros(num_samples)
-us_theta[0:n_theta_stop] = 0.2 * np.ones(n_theta_stop)
-us_init[:,1] = us_theta
+angular_thrusts = np.zeros(num_samples)
+angular_thrusts[0:n_theta_stop] = 0.2 * np.ones(n_theta_stop)
+thrusts_initial_guess[:, 1] = angular_thrusts
 
-xs = cas.DM.zeros((num_samples + 1, spacecraft.num_states))
-xs[0,:] = initial_state.vector
+states_initial_guess = cas.DM.zeros((num_samples + 1, spacecraft.num_states))
+states_initial_guess[0, :] = initial_state.vector
 for k in range(num_samples):
-    xs[k+1,:] = F(xs[k,:],us_init[k,:])
+    states_initial_guess[k + 1, :] = F(states_initial_guess[k, :], thrusts_initial_guess[k, :])
 
-xs_init = xs.full()
+states_initial_guess = states_initial_guess.full()
 
 # Print debug message
 print("== Initial guess ==")
-print("xs_init size: " + str(xs_init.shape))
-print("us_init size: " + str(us_init.shape))
-print(xs_init)
+print("xs_init size: " + str(states_initial_guess.shape))
+print("us_init size: " + str(thrusts_initial_guess.shape))
+print(states_initial_guess)
 print("Initial guess computed. Now starting creation of OCP.")
 
+opti = cas.Opti()
+x0 = opti.parameter(spacecraft.num_states)
+X = opti.variable(spacecraft.num_states, num_samples)
+U = opti.variable(spacecraft.num_forces, num_samples - 1)
+
+opti.minimize(sum([L(X[:, k], U[:, k]) for k in range(num_samples - 1)]))
+opti.subject_to(X[:, 0] == x0)
+opti.subject_to([X[:, k+1] == F(X[:, k], U[:, k]) for k in range(num_samples - 1)])
+opti.subject_to([U[0, k]**2 + U[1, k]**2 <= 1 for k in range(num_samples - 1)])
+opti.subject_to(X[0, -1] == target_distance)
+opti.subject_to(X[2, -1] == 0)
+opti.subject_to(X[3, -1] == target_angular_velocity)
+
+opti.set_value(x0, initial_state.vector)
+opti.set_initial(X, states_initial_guess[1:, :].T)
+opti.set_initial(U, thrusts_initial_guess[1:, :].T)
+opti.solver('ipopt', {'expand': True})
+solution = opti.solve()
+
+Xsol = solution.value(X)
+
+
+fig, axs = plt.subplots(5, 1)
+plt.sca(axs[0])
+plt.plot(Xsol[0, :])
+plt.sca(axs[1])
+plt.plot(Xsol[1, :])
+plt.sca(axs[2])
+plt.plot(Xsol[2, :])
+plt.sca(axs[3])
+plt.plot(Xsol[3, :])
+plt.sca(axs[4])
+plt.plot(Xsol[4, :])
+
+plt.show()
+print(f"")
+print(solution.value(X))
+
+quit(0)
 # Create the optimization variables
 X = cas.MX.sym('X', spacecraft.num_states, num_samples)
 U = cas.MX.sym('U', spacecraft.num_forces, num_samples)
@@ -125,7 +167,7 @@ lbg = []    # Lower bound on constraints
 ubg = []    # Upper bound on constraints
 
 # Formulate NLP
-Xk = xs_init[0,:]
+Xk = states_initial_guess[0, :]
 for k in range(num_samples):
     
     # NLP variable for control
@@ -133,7 +175,7 @@ for k in range(num_samples):
     w = cas.vertcat(w, Uk)
     lbw = cas.vertcat(lbw, -cas.inf, -cas.inf)
     ubw = cas.vertcat(ubw,  cas.inf,  cas.inf)
-    w0 = cas.vertcat(w0, us_init[k,:])
+    w0 = cas.vertcat(w0, thrusts_initial_guess[k, :])
 
     # Circle constraints on controls
     g = cas.vertcat(g, Uk[0]**2 + Uk[1]**2)
@@ -148,7 +190,7 @@ for k in range(num_samples):
     Xk = cas.MX.sym('X_' + str(k+1), spacecraft.num_states, 1)
     w = cas.vertcat(w, Xk)
     lbw_k = cas.vertcat(
-        0.0,
+        spacecraft.moon_radius * spacecraft.scale[0],
         -cas.inf,
         -cas.inf,
         -cas.inf,
@@ -163,7 +205,7 @@ for k in range(num_samples):
     )
     lbw = cas.vertcat(lbw, lbw_k)
     ubw = cas.vertcat(ubw, ubw_k)
-    w0 = cas.vertcat(w0, xs_init[k+1,:])
+    w0 = cas.vertcat(w0, states_initial_guess[k+1, :])
 
     # Equality constraints to match intervals
     g = cas.vertcat(g, Xk_end - Xk)
@@ -171,10 +213,10 @@ for k in range(num_samples):
     ubg = cas.vertcat(ubg, cas.DM.zeros(spacecraft.num_states, 1))
 
 
-# Terminal constraint on altitude
+# Terminal constraint on distance state
 g = cas.vertcat(g, Xk_end[0])
-lbg = cas.vertcat(lbg, target_altitude)
-ubg = cas.vertcat(ubg, target_altitude)
+lbg = cas.vertcat(lbg, target_distance)
+ubg = cas.vertcat(ubg, target_distance)
 
 # Terminal constraint on radial velocity
 g = cas.vertcat(g, Xk_end[2])
@@ -188,34 +230,21 @@ ubg = cas.vertcat(ubg, target_angular_velocity)
 
 # Print debug message
 print("== OCP created ==")
-print("w size: " + str(w.shape) + ", type: " + str(type(w)))
-print("w0 size: " + str(w0.shape)  + ", type: " + str(type(w0)))
-print("lbw size: " + str(lbw.shape) + ", type: " + str(type(lbw)))
-print("ubw size: " + str(ubw.shape) + ", type: " + str(type(ubw)))
-print("J size: " + str(J.shape) + ", type: " + str(type(J)))
-print("g size: " + str(g.shape) + ", type: " + str(type(g)))
-print("lbg size: " + str(lbg.shape)  + ", type: " + str(type(lbg)))
-print("ubg size: " + str(ubg.shape) + ", type: " + str(type(ubg)))
-print("Setting up and starting solver")
+print(f"w size: {w.shape}, type: {type(w)}")
+print(f"w0 size: {w0.shape}, type: {type(w0)}")
+print(f"lbw size: {lbw.shape}, type: {type(lbw)}")
+print(f"ubw size: {ubw.shape}, type: {type(ubw)}")
+print(f"J size: {J.shape}, type: {type(J)}")
+print(f"g size: {g.shape}, type: {type(g)}")
+print(f"lbg size: {lbg.shape}, type: {type(lbg)}")
+print(f"ubg size: {ubg.shape}, type: {type(ubg)}")
+print(f"Setting up and starting solver")
 
-# Create an NLP solver
-nlp = {}
-nlp['f'] = J
-nlp['x'] = w
-nlp['g'] = g
-
-opts = {}
-#opts['ipopt.print_level'] = 0
-opts['ipopt.print_info_string'] = 'yes'
+# Create an NLP solver and solve it
+nlp = {'f': J, 'x': w, 'g': g}
+opts = {'expand': True, 'ipopt.print_info_string': 'yes'}
 solver = cas.nlpsol('solver', 'ipopt', nlp, opts)
-
-# Solve the NLP
-solver_in = {}
-solver_in['x0'] = w0
-solver_in['lbx'] = lbw
-solver_in['ubx'] = ubw
-solver_in['lbg'] = lbg
-solver_in['ubg'] = ubg
+solver_in = {'x0': w0, 'lbx': lbw, 'ubx': ubw, 'lbg': lbg, 'ubg': ubg}
 solver_out = solver(**solver_in)
 print("== OCP solved ==")
 
@@ -228,12 +257,12 @@ x_opt = cas.DM.zeros((num_samples, spacecraft.num_states))
 
 nxnu = spacecraft.num_states + spacecraft.num_forces
 
-u_opt[:,0] = sol[0::nxnu]
-u_opt[:,1] = sol[1::nxnu]
-x_opt[:,0] = sol[2::nxnu]
-x_opt[:,1] = sol[3::nxnu]
-x_opt[:,2] = sol[4::nxnu]
-x_opt[:,3] = sol[5::nxnu]
-x_opt[:,4] = sol[6::nxnu]
+u_opt[:, 0] = sol[0::nxnu]
+u_opt[:, 1] = sol[1::nxnu]
+x_opt[:, 0] = sol[2::nxnu]
+x_opt[:, 1] = sol[3::nxnu]
+x_opt[:, 2] = sol[4::nxnu]
+x_opt[:, 3] = sol[5::nxnu]
+x_opt[:, 4] = sol[6::nxnu]
 
 # Write to .xml file
