@@ -171,7 +171,7 @@ if __name__ == '__main__':
     # Import plotting library and runge kutta 4 integrator    
     import matplotlib.pyplot as plt
     from src.spaceflight_playground.rk4step import rk4step_ode
-    from src.spaceflight_playground.models.kepler_orbit import kepler_orbit as orbit
+    from src.spaceflight_playground.models.kepler_orbit import KeplerOrbit as orbit
     from src.spaceflight_playground.conversion import *
     from src.spaceflight_playground.xml_writer import *
 
@@ -300,10 +300,10 @@ if __name__ == '__main__':
     # Create an orbit instance
     orb = orbit()
     orb.fromPolarState(
-        rho =spacecraft.moon_radius + spacecraft.unscale[0] * altitude_ref,
-        theta = 0.0,
-        rhoDot = 0.0,
-        thetaDot = spacecraft.unscale[3] * angVel_ref
+        distance=spacecraft.moon_radius + spacecraft.unscale[0] * altitude_ref,
+        angle= 0.0,
+        radial_velocity= 0.0,
+        angular_velocity=spacecraft.unscale[3] * angVel_ref
     )
 
     # Write trajectory to xml file
@@ -311,8 +311,8 @@ if __name__ == '__main__':
         filename = 'trajectory.xml',
         T = T,
         N = N,
-        e = orb.e[0:2],
-        h = orb.h[2],
+        e =orb.eccentricity[0:2],
+        h = orb.specific_angular_momentum[2],
         xPoses = xs_cart[0,:],
         yPoses = xs_cart[1,:],
         xVelos = xs_cart[2,:],

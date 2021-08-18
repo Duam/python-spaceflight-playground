@@ -11,7 +11,7 @@ sys.path.append(os.getcwd())
 
 import numpy as np
 
-from src.spaceflight_playground.models.kepler_orbit import kepler_orbit as orbit
+from src.spaceflight_playground.models.kepler_orbit import KeplerOrbit as orbit
 from src.spaceflight_playground.utils import read_from_xml
 from spaceflight_playground.orbiter.orbiter_animation import OrbitAnimator
 
@@ -21,8 +21,8 @@ params, target_orbit, xs_out, us_out = read_from_xml('trajectory.xml')
 
 orb_tar = orbit()
 orb_tar.setOrbitalElements(
-    e = np.array([target_orbit['e_x'], target_orbit['e_y'], 0]),
-    h = np.array([0,0, target_orbit['h']])
+    eccentricity= np.array([target_orbit['e_x'], target_orbit['e_y'], 0]),
+    specific_angular_momentum= np.array([0, 0, target_orbit['h']])
 )
 
 print(xs_out[0,:])

@@ -82,7 +82,7 @@ class OrbitAnimator:
         self.trajectory_plot, = self.ax.plot([], [],'o-', lw=2)
 
         # Osculating orbit
-        self.orbit_osculating = orbit.kepler_orbit()
+        self.orbit_osculating = orbit.KeplerOrbit()
         self.orbit_osculating.fromCartesianState(
             self.xPositions[0],
             self.yPositions[0],
