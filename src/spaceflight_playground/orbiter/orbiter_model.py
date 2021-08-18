@@ -308,7 +308,7 @@ if __name__ == '__main__':
 
     # Write trajectory to xml file
     write_to_xml(
-        filename = 'trajectory.xml',
+        filename = 'orbit_animator_trajectory.xml',
         T = T,
         N = N,
         e =orb.eccentricity[0:2],
