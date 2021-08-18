@@ -10,6 +10,7 @@ setup(
         'casadi',
         'matplotlib',
         'typing',
+        'scipy',
     ],
     python_requires='>=3.6',
     package_dir={'': 'src'},
