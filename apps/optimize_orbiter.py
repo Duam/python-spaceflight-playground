@@ -41,8 +41,7 @@ integrator_stepsize = timestep / integrator_substeps
 # Values for terminal constraints
 target_altitude = 20  # [km]
 target_distance = spacecraft.moon_radius + 1e3 * target_altitude
-target_angular_velocity = 1e3 * np.sqrt(spacecraft.gravitational_constant * spacecraft.moon_mass /
-                                        target_distance ** 3)
+target_angular_velocity = np.sqrt(spacecraft.gravitational_constant * spacecraft.moon_mass / target_distance ** 3)
 
 # Print out values
 print("== Terminal values ==")
@@ -87,16 +86,10 @@ L = cas.Function('L', [x, u], [Lk], ['x', 'u'], ['L'])
 
 # Create an initial guess for the OCP by forward simulation
 thrusts_initial_guess = np.zeros((num_samples, spacecraft.num_forces))
-n_r_stop = 50
-n_theta_stop = 50
-
-radial_thrusts = np.zeros(num_samples)
-radial_thrusts[0:n_r_stop] = 0.1075 * np.ones(n_r_stop)
-thrusts_initial_guess[:, 0] = radial_thrusts
-
-angular_thrusts = np.zeros(num_samples)
-angular_thrusts[0:n_theta_stop] = 0.2 * np.ones(n_theta_stop)
-thrusts_initial_guess[:, 1] = angular_thrusts
+thrust_radial_stop = 20
+thrust_angular_stop = 50
+thrusts_initial_guess[0:thrust_radial_stop, 0] = 0.19 * np.ones(thrust_radial_stop)
+thrusts_initial_guess[0:thrust_angular_stop, 1] = 0.36 * np.ones(thrust_angular_stop)
 
 states_initial_guess = cas.DM.zeros((num_samples + 1, spacecraft.num_states))
 states_initial_guess[0, :] = initial_state.vector
@@ -126,8 +119,8 @@ opti.subject_to(X[2, -1] == 0)
 opti.subject_to(X[3, -1] == target_angular_velocity)
 
 opti.set_value(x0, initial_state.vector)
-opti.set_initial(X, states_initial_guess[1:, :].total_time)
-opti.set_initial(U, thrusts_initial_guess[1:, :].total_time)
+opti.set_initial(X, states_initial_guess[1:, :].T)
+opti.set_initial(U, thrusts_initial_guess[1:, :].T)
 opti.solver('ipopt', {'expand': True})
 solution = opti.solve()
 
