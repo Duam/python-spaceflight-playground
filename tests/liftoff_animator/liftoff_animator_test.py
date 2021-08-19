@@ -9,9 +9,9 @@ import sys, os
 sys.path.append(os.path.realpath('../../'))
 sys.path.append(os.getcwd())
 
-from src.spaceflight_playground.models.liftoff_model.liftoff_model import liftoff_model
-from src.spaceflight_playground.models.liftoff_model.liftoff_trajectory import liftoff_trajectory
-from src.spaceflight_playground.models.liftoff_model.liftoff_animator import liftoff_animator
+from src.spaceflight_playground.aux_models.liftoff_model.liftoff_model import liftoff_model
+from src.spaceflight_playground.aux_models.liftoff_model.liftoff_trajectory import liftoff_trajectory
+from src.spaceflight_playground.aux_models.liftoff_model.liftoff_animator import liftoff_animator
 
 import numpy as np
 
@@ -19,7 +19,7 @@ import numpy as np
 # Load a trajectory
 spacecraft = liftoff_model()
 trajectory = liftoff_trajectory(T=600.0, N=100)
-trajectory.fromXML('trajectory.xml')
+trajectory.fromXML('orbit_animator_trajectory.xml')
 
 trajectory.us[1,:] = np.pi/4 * np.ones((1,100))
 

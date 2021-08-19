@@ -12,7 +12,7 @@ sys.path.append(os.getcwd())
 import xml.etree.cElementTree as etree
 import casadi as cas
 
-from src.spaceflight_playground.models.liftoff_model.liftoff_model import liftoff_model
+from src.spaceflight_playground.aux_models.liftoff_model.liftoff_model import liftoff_model
 
 
 ##

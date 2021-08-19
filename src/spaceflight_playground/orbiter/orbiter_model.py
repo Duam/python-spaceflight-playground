@@ -171,7 +171,7 @@ if __name__ == '__main__':
     # Import plotting library and runge kutta 4 integrator    
     import matplotlib.pyplot as plt
     from src.spaceflight_playground.rk4step import rk4step_ode
-    from src.spaceflight_playground.models.kepler_orbit import KeplerOrbit as orbit
+    from src.spaceflight_playground.aux_models.kepler_orbit import KeplerOrbit as orbit
     from src.spaceflight_playground.conversion import *
     from src.spaceflight_playground.xml_writer import *
 

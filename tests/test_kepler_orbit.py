@@ -1,6 +1,6 @@
 import numpy as np
 from spaceflight_playground.constants import Universe
-from spaceflight_playground.models.kepler_orbit import KeplerOrbit
+from spaceflight_playground.aux_models.kepler_orbit import KeplerOrbit
 
 if __name__ == '__main__':
     # Import plotting library

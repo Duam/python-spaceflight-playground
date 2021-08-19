@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from spaceflight_playground.models.AR1_model import AR1_model
+from spaceflight_playground.aux_models.AR1_model import AR1_model
 
 if __name__ == '__main__':
     ar1 = AR1_model(autoregressivity=0.3, mean=5, variance=10)

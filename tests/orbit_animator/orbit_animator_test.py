@@ -1,5 +1,5 @@
 import numpy as np
-from spaceflight_playground.models.kepler_orbit import KeplerOrbit
+from spaceflight_playground.aux_models.kepler_orbit import KeplerOrbit
 from spaceflight_playground.utils import read_from_xml
 from spaceflight_playground.orbiter.orbiter_animation import OrbitAnimator
 

@@ -34,7 +34,7 @@ class liftoff_animator:
         self.T = trajectory.total_time
         self.N = trajectory.num_samples
         self.params = trajectory.rocket.params
-        self.xs = trajectory.xs
+        self.xs = trajectory.states_initial_guess
         self.us = trajectory.us
         self.ds = trajectory.ds
 

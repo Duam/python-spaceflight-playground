@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from spaceflight_playground.models.log_wind_profile_model import log_wind_profile_model
+from spaceflight_playground.aux_models.log_wind_profile_model import log_wind_profile_model
 
 if __name__ == '__main__':
     # Create wind profile

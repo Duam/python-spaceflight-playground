@@ -7,7 +7,7 @@ def compute_log_wind_speed(
         reference_height: float,
         reference_wind_speed: float
 ) -> float:
-    """Computes the wind speed according to a logarithmic wind profile model. It models
+    """Computes the wind speed according to a logarithmic wind profile model. It aux_models
     the wind's magnitude along the vertical (height) axis.
     :param height: The height to compute the wind speed at [m].
     :param surface_roughness: The location's surface roughness. Can be found in tables online.
