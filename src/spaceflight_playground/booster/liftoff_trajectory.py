@@ -12,13 +12,13 @@ sys.path.append(os.getcwd())
 import xml.etree.cElementTree as etree
 import casadi as cas
 
-from spaceflight_playground.liftoff_model.liftoff_model import liftoff_model
+from spaceflight_playground.booster.liftoff_model import liftoff_model
 
 
 ##
 # @class liftoff_trajectory
 # @brief Representation of a state and control 
-#        trajectory of the liftoff_model class
+#        trajectory of the booster class
 ##
 class liftoff_trajectory:
 
@@ -26,7 +26,7 @@ class liftoff_trajectory:
     # @brief Initialization procedure
     # @param T Simulation time
     # @param N Number of samples
-    # @param rocket liftoff_model instance (needed for parameters)
+    # @param rocket booster instance (needed for parameters)
     ##
     def __init__(self, T, N, rocket = None):
 

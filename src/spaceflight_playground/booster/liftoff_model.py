@@ -39,7 +39,7 @@ Creates an animation from a liftoff trajectory.
 """
 
 ## 
-# @class liftoff_model
+# @class booster
 # @brief Model of a 2d rocket during liftoff while 
 #        considering very simple aerodynamics.
 ##

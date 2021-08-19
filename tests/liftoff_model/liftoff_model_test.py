@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 import casadi as cas
 
 from src.spaceflight_playground.rk4step import rk4step_ode
-from spaceflight_playground.liftoff_model import liftoff_model
-from spaceflight_playground.liftoff_model import liftoff_trajectory
+from spaceflight_playground.booster import liftoff_model
+from spaceflight_playground.booster import liftoff_trajectory
 
 
 # Create a spacecraft instance
