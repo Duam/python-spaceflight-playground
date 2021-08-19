@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Tuple
-from spaceflight_playground.conversion import Universe
+from spaceflight_playground.constants import Universe
 from spaceflight_playground.conversion import pol2cart, state_pol2cart
 
 
