@@ -1,81 +1,66 @@
-#!/usr/bin/python3
-
 import numpy as np
 import casadi as cas
+from dataclasses import dataclass
+from spaceflight_playground.constants import Universe
+from typing import Union
 
-##
-# @class orbit_cartesian_model
-# @brief Model of a 2-dimensional point mass spacecraft in cartesian coordinates.
-##
-class orbit_cartesian_model:
 
-    ##
-    # @brief Initialization procedure
-    ##
+class CartesianOrbiter:
     def __init__(self):
-        # Universe parameters
+        """Model of a 2-dimensional point mass spacecraft in cartesian coordinates.
 
-        # Gravitational constant (m^3/(kg*s^2))
-        self.G = 6.67408 * 10**-11
-        # Moon mass (kg)
-        self.M = 7.348 * 10**22
-        # Std. gravitational parameter (m^3/s^2)
-        self.mu = self.G * self.M
-        # Moon radius (m)
-        self.R = 1737.5 * 10**3
+        Assumptions/Simplifications:
+        - No atmosphere, because it's the moon
+        - The moon doesn't rotate
+        - Spacecraft has no rotation
+        - Thrusters can fire in any direction
+        - The moon is a point mass and perfectly circular
+        """
+        # Standard gravitational parameter [m^3/s^2]
+        self.mu = Universe.gravitational_constant * Universe.moon_mass
+        self.full_mass = 20.0 * 1e3  # [kg]
+        self.empty_mass = 1.0 * 1e3  # [kg]
+        self.max_thrust = 30.0 * 1e4  # [N]
+        self.fuel_consumption_per_second = 100.0  # [kg/s]
 
-        # Spacecraft parameters
-        
-        # Initial mass (kg)
-        self.m0 = 20.0 * 10**3
-        # Empty mass (kg)
-        self.me = 1.0 * 10**3
-        # Maximum thrust (N)
-        self.u_max = 30.0 * 10**4
-        # Fuel consumption coefficient (kg/s)
-        self.km = 100.0
-
-        # Dynamics parameters
-
-        # State and control dimension
-        self.nx = 5
-        self.nu = 2
         # Scaling factor
         self.scale = cas.vertcat(
-            1e-3, # m -> km
-            1e-3, # m -> km
-            1e-3, # m/s -> km/s
-            1e-3, # m/s -> km/s
-            1     # kg -> kg
+            1e-3,  # m -> km
+            1e-3,  # m -> km
+            1e-3,  # m/s -> km/s
+            1e-3,  # m/s -> km/s
+            1      # kg -> kg
         )
         # Un-scaling factor
         self.unscale = self.scale**-1
+
         # Initial state
         self.x0 = cas.vertcat(
-            self.R,
+            Universe.moon_radius,
             0.0,
             0.0,
             0.0,
-            self.m0
+            self.full_mass
         )
         # Scaled initial state
         self.x0_scaled = self.x0 * self.scale
 
 
-    ##
-    # @brief The ODE xdot = f(x,u) of the spacecraft
-    # @param x The state (cartesian coordinates):
-    #          - x-coordinate (m)
-    #          - y-coordinate (m)
-    #          - x-velocity (m/s)
-    #          - y-velocity (m/s)
-    #          - mass (kg)
-    # @param u The controls
-    #          - Thrust in x-direction (N)
-    #          - Thrust in y-direction (N)
-    # @return The derivative of the state
-    ##
-    def dynamics(self, x, u):
+    def dynamics(self, state, thrust):
+        """The ODE describing the dynamics of the spacecraft.
+        State:
+        - x-coordinate [m]
+        - y-coordinate [m]
+        - x-velocity [m/s]
+        - y-velocity [m/s]
+        - mass [kg]
+        Thrust:
+        - Force in x-direction [N]
+        - Force in y-direction [N]
+        :param state: The current state.
+        :param thrust: The currently acting force.
+        :return: The current state derivative.
+        """
 
         # Get states
         xPos = x[0] # x-Position (m)
@@ -92,11 +77,11 @@ class orbit_cartesian_model:
         coeff_grav = self.mu / cas.sqrt(xPos**2 + yPos**2)**3
 
         # Compute accelerations
-        xAcc = (T_x * self.u_max / m) - (xPos * coeff_grav)
-        yAcc = (T_y * self.u_max / m) - (yPos * coeff_grav)
+        xAcc = (T_x * self.max_thrust / m) - (xPos * coeff_grav)
+        yAcc = (T_y * self.max_thrust / m) - (yPos * coeff_grav)
 
         # Compute mass derivative
-        mDot = - self.km * (T_x**2 + T_y**2)
+        mDot = - self.fuel_consumption_per_second * (T_x ** 2 + T_y ** 2)
         
         # Stack the derivatives
         xdot = cas.vertcat(
@@ -109,39 +94,22 @@ class orbit_cartesian_model:
 
         return xdot
 
-    ##
-    # @brief The scaled ODE of the spacecraft
-    # @param x The scaled state (cartesian coordinates):
-    #          - x-coordinate (km)
-    #          - y-coordinate (km)
-    #          - x-velocity (km/s)
-    #          - y-velocity (km/s)
-    #          - mass (kg)
-    # @param u The controls
-    #          - Thrust in x-direction (N)
-    #          - Thrust in y-direction (N)
-    # @return The derivative of the state
-    ##
-    def dynamics_scaled(self, x_scaled, u):
-        # Unscale back to (m, m/s)
-        x = x_scaled * self.unscale
 
-        # Feed the ODE with the downscaled state
-        xdot = self.dynamics(x, u)
-
-        # Scale back to (km, km/s) and return
-        xdot_scaled = xdot * self.scale
-        return xdot_scaled
+    def dynamics_scaled(self, state_scaled, thrust):
+        """The scaled ODE of the spacecraft.
+        :param state_scaled: The scaled state.
+        :param thrust: The thrust vector applied to the spacecraft.
+        :return: The scaled state derivative.
+        """
+        state = state_scaled * self.unscale
+        state_derivative = self.dynamics(state, thrust)
+        return state_derivative * self.scale
 
 
 ##
 # Execute this script to run the model and to generate a trajectory
 ##
 if __name__ == '__main__':
-
-    import sys, os
-    sys.path.append(os.path.realpath('../../../'))
-    sys.path.append(os.getcwd())
 
     # Import plotting library and runge kutta 4 integrator    
     import matplotlib.pyplot as plt
@@ -157,10 +125,10 @@ if __name__ == '__main__':
     print("Moon radius R: " + str(spacecraft.R) + " m")
     
     print("Spacecraft parameters:")
-    print("Initial mass: " + str(spacecraft.m0) + " kg")
-    print("Empty mass: " + str(spacecraft.me) + " kg")
-    print("Max. thrust: " + str(spacecraft.u_max) + " N")
-    print("Fuel consumption coeff:" + str(spacecraft.km) + " kg/s")
+    print("Initial mass: " + str(spacecraft.full_mass) + " kg")
+    print("Empty mass: " + str(spacecraft.empty_mass) + " kg")
+    print("Max. thrust: " + str(spacecraft.max_thrust) + " N")
+    print("Fuel consumption coeff:" + str(spacecraft.fuel_consumption_per_second) + " kg/s")
     print("Initial state: " + str(spacecraft.x0))
     print("Initial state (scaled): " + str(spacecraft.x0_scaled))
     print("State scale vector: " + str(spacecraft.scale))
