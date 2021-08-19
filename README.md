@@ -1,29 +1,27 @@
-# Dependencies
-python3 with: casadi, numpy, matplotlib
+# Spaceflight-playground
 
-# ToDo
-1. Liftoff animator
-2. Implement orbit trajectory class, change orbit_polar_model accordingly
-3. Solve an OCP for liftoff
+This repository is a collection of spaceflight-related optimal-control problems
+and visualizations.
 
-## Notes
-* Let angle reference line stick to spacecraft
-* Spacecraft moves through space, camera follows it
-* Only telemetry box is fixed to axes
+#### Folder structure
+```
+./
+ ├ apps/                          # Executable files
+ ├ legacy/                        # Old matlab code
+ ├ src/
+ │ └ spaceflight_playground/      # Source code, library
+ │   ├ orbiter/                       # Point-mass object in orbit
+ │   ├ booster/                       # Rigid-body object during liftoff
+ │   └ aux_models/                    # Auxiliary models
+ └ tests/                         # Unit-tests
+```
 
-# Folder structure
-* integrators
-* ocps: Optimal control problems
-* legacy: Old matlab code
-* models
- * AR1_model: Autoregression model for wind simulation
- * kepler_orbit: 2D kepler orbit model
- * liftoff_model: 2D spacecraft model at liftoff
- * log_wind_profile_model: Logarithmic wind profile model
- * orbit_cartesian_model: 2D spacecraft model in orbit (cartesian coordinates)
- * orbit_polar_model: 2D spacecraft model in orbit (polar coordinates)
-* tests
- * liftoff_animator: Test for liftoff animator (TODO: merge with test for liftoff model)
- * liftoff_model: Test for liftoff model
- * orbit_animator: Test for orbit animator (TODO: merge with test for orbit model)
-* utils
+#### Usage
+```bash
+$ git clone git@github.com:Duam/python-spaceflight-playground.git
+$ cd python-spaceflight-playground
+$ virtualenv venv
+$ source venv/bin/activate
+$ pip install -e .
+$ echo "Enjoy!"
+```
