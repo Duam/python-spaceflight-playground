@@ -126,8 +126,8 @@ opti.subject_to(X[2, -1] == 0)
 opti.subject_to(X[3, -1] == target_angular_velocity)
 
 opti.set_value(x0, initial_state.vector)
-opti.set_initial(X, states_initial_guess[1:, :].T)
-opti.set_initial(U, thrusts_initial_guess[1:, :].T)
+opti.set_initial(X, states_initial_guess[1:, :].total_time)
+opti.set_initial(U, thrusts_initial_guess[1:, :].total_time)
 opti.solver('ipopt', {'expand': True})
 solution = opti.solve()
 

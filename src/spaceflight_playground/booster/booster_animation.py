@@ -35,7 +35,7 @@ class liftoff_animator:
         self.N = trajectory.num_samples
         self.params = trajectory.rocket.params
         self.xs = trajectory.states_initial_guess
-        self.us = trajectory.us
+        self.us = trajectory.thrusts
         self.ds = trajectory.ds
 
         # Some rocket geometry parameters

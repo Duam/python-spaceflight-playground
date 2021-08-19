@@ -21,7 +21,7 @@ spacecraft = booster_model()
 trajectory = booster_trajectory(T=600.0, N=100)
 trajectory.fromXML('orbit_animator_trajectory.xml')
 
-trajectory.us[1,:] = np.pi/4 * np.ones((1,100))
+trajectory.thrusts[1, :] = np.pi / 4 * np.ones((1, 100))
 
 # Create an animator
 animator = booster_animation(trajectory=trajectory)
