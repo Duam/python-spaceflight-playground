@@ -9,22 +9,22 @@ import sys, os
 sys.path.append(os.path.realpath('../../'))
 sys.path.append(os.getcwd())
 
-from spaceflight_playground.booster import liftoff_model
-from spaceflight_playground.booster import liftoff_trajectory
-from spaceflight_playground.booster import liftoff_animator
+from spaceflight_playground.booster import booster_model
+from spaceflight_playground.booster import booster_trajectory
+from spaceflight_playground.booster import booster_animation
 
 import numpy as np
 
 
 # Load a trajectory
-spacecraft = liftoff_model()
-trajectory = liftoff_trajectory(T=600.0, N=100)
+spacecraft = booster_model()
+trajectory = booster_trajectory(T=600.0, N=100)
 trajectory.fromXML('orbit_animator_trajectory.xml')
 
 trajectory.us[1,:] = np.pi/4 * np.ones((1,100))
 
 # Create an animator
-animator = liftoff_animator(trajectory=trajectory)
+animator = booster_animation(trajectory=trajectory)
 
 # Run the animator
 animator.run(10)

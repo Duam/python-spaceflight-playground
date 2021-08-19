@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 ##
-# @file liftoff_animator.py
+# @file booster_animation.py
 # @author Paul Daum
 # @brief Takes a trajectory of a liftoff and creates a nice animation of a spacecraft.
 ##

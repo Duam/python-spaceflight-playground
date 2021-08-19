@@ -14,12 +14,12 @@ import matplotlib.pyplot as plt
 import casadi as cas
 
 from src.spaceflight_playground.rk4step import rk4step_ode
-from spaceflight_playground.booster import liftoff_model
-from spaceflight_playground.booster import liftoff_trajectory
+from spaceflight_playground.booster import booster_model
+from spaceflight_playground.booster import booster_trajectory
 
 
 # Create a spacecraft instance
-spacecraft = liftoff_model()
+spacecraft = booster_model()
 
 # Print some parameters
 print("Spacecraft parameters:")
@@ -109,14 +109,14 @@ plt.show()
 
 
 # Test xml writer
-trajectory = liftoff_trajectory(T, N, spacecraft)
+trajectory = booster_trajectory(T, N, spacecraft)
 trajectory.setXs(xs)
 trajectory.setUs(controls)
 trajectory.setDs(wind_forces)
 trajectory.toXML('orbit_animator_trajectory.xml')
 
 # Test xml reader
-load_trajectory = liftoff_trajectory(T, N, spacecraft)
+load_trajectory = booster_trajectory(T, N, spacecraft)
 load_trajectory.fromXML('orbit_animator_trajectory.xml')
 
 print(load_trajectory.rocket.params)

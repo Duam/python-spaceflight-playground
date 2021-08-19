@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 ## 
-# @file liftoff_trajectory.py
+# @file booster_trajectory.py
 # @author Paul Daum
 ##
 
@@ -12,7 +12,7 @@ sys.path.append(os.getcwd())
 import xml.etree.cElementTree as etree
 import casadi as cas
 
-from spaceflight_playground.booster.liftoff_model import liftoff_model
+from spaceflight_playground.booster.booster_model import liftoff_model
 
 
 ##
