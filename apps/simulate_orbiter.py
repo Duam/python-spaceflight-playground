@@ -40,21 +40,14 @@ print(f"Initial state: {initial_state.vector}")
 
 # Choose controls for simulation
 thrusts = np.zeros((spacecraft.num_forces, num_samples))
-thrust_radial_stop = 60
-thrust_angular_stop = 85
-
-radial_thrusts = np.zeros(num_samples)
-radial_thrusts[0:thrust_radial_stop] = 0.1075 * np.ones(thrust_radial_stop)
-thrusts[0, :] = radial_thrusts
-
-angular_thrusts = np.zeros(num_samples)
-angular_thrusts[0:thrust_angular_stop] = 0.2 * np.ones(thrust_angular_stop)
-thrusts[1, :] = angular_thrusts
+thrust_radial_stop = 20
+thrust_angular_stop = 50
+thrusts[0, 0:thrust_radial_stop] = 0.19 * np.ones(thrust_radial_stop)
+thrusts[1, 0:thrust_angular_stop] = 0.36 * np.ones(thrust_angular_stop)
 
 # Simulate the system
 xs = cas.DM.zeros((spacecraft.num_states, num_samples + 1))
 xs[:, 0] = initial_state.vector
-
 for k in range(1, num_samples + 1):
     xs[:, k] = next_state_fun(xs[:, k - 1], thrusts[:, k - 1])
 
@@ -69,17 +62,17 @@ tAxis = np.linspace(0, total_time - timestep, num_samples + 1)
 plt.figure(1)
 
 # Reference altitude [km] & angular velocity [µrad]
-altitude_ref = 20
-angVel_ref = 1e3 * np.sqrt(spacecraft.gravitational_constant * spacecraft.moon_mass /
-                           (spacecraft.moon_radius + 1e3 * altitude_ref) ** 3)
+target_altitude = 20  # [km]
+target_distance = spacecraft.moon_radius + target_altitude * 1e3
+target_angular_velocity = np.sqrt(spacecraft.gravitational_constant * spacecraft.moon_mass / target_distance ** 3)  # [rad/s]
 
-print("Reference altitude: " + str(altitude_ref))
-print("Reference angular velocity: " + str(angVel_ref))
+print("Reference altitude: " + str(target_altitude))
+print("Reference angular velocity: " + str(target_angular_velocity))
 
 # Plot
 plt.subplot(321)
 plt.plot(tAxis, xs[0, :])
-plt.plot(tAxis, altitude_ref * np.ones((tAxis.size, 1)))
+plt.plot(tAxis, target_distance * np.ones((tAxis.size, 1)))
 plt.ylabel('Altitude [km]')
 
 plt.subplot(322)
@@ -94,7 +87,7 @@ plt.ylabel('Radial vel. [km/s]')
 
 plt.subplot(324)
 plt.plot(tAxis, xs[3, :])
-plt.plot(tAxis, angVel_ref * np.ones((tAxis.size, 1)))
+plt.plot(tAxis, target_angular_velocity * np.ones((tAxis.size, 1)))
 plt.ylabel('Angular vel. [murad/s]')
 
 plt.subplot(325)
@@ -121,10 +114,10 @@ print(xs_cart[1, :])
 # Create an orbit instance
 orb = KeplerOrbit()
 orb.fromPolarState(
-    distance=spacecraft.moon_radius + spacecraft.unscale[0] * altitude_ref,
+    distance=spacecraft.moon_radius + spacecraft.unscale[0] * target_altitude,
     angle=0.0,
     radial_velocity=0.0,
-    angular_velocity=spacecraft.unscale[3] * angVel_ref
+    angular_velocity=spacecraft.unscale[3] * target_angular_velocity
 )
 
 # Write trajectory to xml file
