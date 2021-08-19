@@ -1,53 +1,20 @@
 import numpy as np
 
-"""
-# Model
-Logarithmic wind profile model. It models the winds magnitude along the vertical (height) axis.
 
-## Initialization parameters
-- zr: Surface roughness parameter (default=0.001)
-- z0: Reference height (default=10)
-- u0: Reference wind speed (default=1)
-
-## Usage
-1. Initialize the model using the above parameters
-2. Use the getWindspeed(z) function to get the wind speed at an altitude of height z
-"""
-
-## 
-# @class log_wind_profile_model
-# @brief A logarithmic wind profile model.
-##
-class log_wind_profile_model:
-
-    ##
-    # @brief Initialization procedure
-    # @param zr Surface roughness parameter.
-    #           Can be found in tables online.
-    # @param z0 Reference height
-    # @param u0 Reference wind speed
-    ##
-    def __init__(self, zr=0.001, z0=10.0, u0=1.0):
-        # Surface roughtness parameter
-        self.zr = zr
-        # Reference height
-        self.z0 = z0
-        # Reference wind speed
-        self.u0 = u0
-
-    ##
-    # @brief Computes the the wind speed according 
-    #        to the logarithmic wind profile model.
-    # @param z The height of which we want to get
-    #          the wind speed
-    # @return The wind speed
-    ##
-    def getWindspeed(self, z):
-        # Check for invalid input
-        if (z == 0):
-            print("In log_wind_profile_model: Input z can not be zero. Check your input.")
-            return 0
-
-        # Compute wind speed and return
-        u = self.u0 * np.log(z/self.zr) / np.log(self.z0/self.zr)
-        return u
+def compute_log_wind_speed(
+        height: float,
+        surface_roughness: float,
+        reference_height: float,
+        reference_wind_speed: float
+) -> float:
+    """Computes the wind speed according to a logarithmic wind profile model. It models
+    the wind's magnitude along the vertical (height) axis.
+    :param height: The height to compute the wind speed at [m].
+    :param surface_roughness: The location's surface roughness. Can be found in tables online.
+    :param reference_height: The height at which reference_wind_speed is measured.
+    :param reference_wind_speed: The wind speed at the reference_height.
+    :return: The wind speed at the given height.
+    """
+    assert height >= 0, f"Height must be non-negative, is {height}m."
+    return reference_wind_speed * np.log(height / surface_roughness) / np.log(reference_height / surface_roughness)
+    u = self.u0 * np.log(z / self.zr) / np.log(self.z0 / self.zr)
