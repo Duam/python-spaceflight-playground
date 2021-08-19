@@ -7,7 +7,6 @@ and visualizations.
 ```
 ./
  ├ apps/                          # Executable files
- ├ legacy/                        # Old matlab code
  ├ src/
  │ └ spaceflight_playground/      # Source code, library
  │   ├ orbiter/                       # Point-mass object in orbit
